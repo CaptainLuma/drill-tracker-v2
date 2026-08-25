@@ -1,11 +1,11 @@
 import { useQuery } from "@tanstack/react-query"
 import DrillListItem from "../DrillListItem/DrillListItem"
 import type { Drill } from "../../../shared/models/drill"
-// import DrillList from "./DrillList"
 import style from "./DrillListSection.module.css"
 import { useContext } from "react"
 import { NavigationContext } from "../../App"
 import AlertsList from "../AlertsList/AlertsList"
+import { LayoutGroup } from "motion/react"
 
 export default function DrillListSection() {
     const { data: result, isLoading } = useQuery({
@@ -17,14 +17,16 @@ export default function DrillListSection() {
 
     function RenderDrillList(drills: Drill[]) {
         return (<>
-            <div className={style.drillList}>
-                {drills.map(drill => (
-                    <DrillListItem 
-                        key={drill.id}
-                        drill={drill} 
-                    />
-                ))}
-            </div>
+            <LayoutGroup>
+                <div className={style.drillList}>
+                    {drills.map(drill => (
+                        <DrillListItem
+                            key={drill.id}
+                            drill={drill}
+                        />
+                    ))}
+                </div>
+            </LayoutGroup>
         </>)
     }
 

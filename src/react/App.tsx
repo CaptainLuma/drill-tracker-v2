@@ -15,6 +15,18 @@ export const NavigationContext = createContext<NavigationContextType | null>(nul
 
 const queryClient = new QueryClient()
 
+export default function App() {
+	return (
+		<QueryClientProvider client={queryClient}>
+			<AlertProvider>
+				<AppContent />
+			</AlertProvider>
+		</QueryClientProvider>
+	)
+}
+
+
+
 function AppContent() {
 	const [ openPage, setOpenPage ] = useState<Page>("drill list page")
 	const { clearAlerts } = useAlerts()
@@ -39,14 +51,4 @@ function AppContent() {
 			{getOpenPageComponent()}
 		</NavigationContext.Provider>
 	</>)
-}
-
-export default function App() {
-	return (
-		<QueryClientProvider client={queryClient}>
-			<AlertProvider>
-				<AppContent />
-			</AlertProvider>
-		</QueryClientProvider>
-	)
 }

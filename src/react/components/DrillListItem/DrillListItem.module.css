@@ -36,6 +36,6 @@ h3 {
     padding: 10px;
 }
 
-.hidden {
-    display: none;
+.bodyWrapper {
+    overflow: hidden;
 }
