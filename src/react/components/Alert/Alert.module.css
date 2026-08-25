@@ -1,0 +1,26 @@
+.alert {
+    padding: 15px;
+    margin-bottom: 15px;
+
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+}
+
+.alert p {
+    margin: 0;
+}
+
+.info {
+    background-color: var(--info-color);
+}
+
+.danger {
+    background-color: var(--danger-color);
+}
+
+img {
+    width: 25px;
+    height: auto;
+    cursor: pointer;
+}

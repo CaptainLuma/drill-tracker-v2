@@ -1,0 +1,10 @@
+.drillListSection {
+    width: calc(100% - 50px);
+    max-width: 1100px;
+    margin: auto;
+    margin-bottom: 500px;
+}
+
+.controls {
+    margin-bottom: 15px;
+}

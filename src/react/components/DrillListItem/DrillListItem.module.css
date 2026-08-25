@@ -1,0 +1,41 @@
+h3 {
+    margin: 0;
+}
+
+.drillListItem {
+    background-color: var(--secondary-background-color);
+    margin: 0;
+    padding: 0;
+}
+
+.header {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 10px;
+    align-items: center;
+
+    border-bottom: var(--border-soft);
+    background-color: var(--third-background-color);
+    padding: 5px 10px;
+}
+
+.header img {
+    display: block;
+    width: 25px;
+    height: auto;
+    cursor: pointer;
+}
+
+.headerControls {
+    display: flex;
+    gap: 15px;
+}
+
+.body {
+    border-bottom: var(--border-soft);
+    padding: 10px;
+}
+
+.hidden {
+    display: none;
+}

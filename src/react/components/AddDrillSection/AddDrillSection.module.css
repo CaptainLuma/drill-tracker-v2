@@ -1,0 +1,11 @@
+.addDrillSection {
+    width: calc(100% - 50px);
+    max-width: 800px;
+    margin: auto;
+    /* margin-bottom: 500px; */
+}
+
+.controls {
+    display: flex;
+    gap: 10px;
+}
