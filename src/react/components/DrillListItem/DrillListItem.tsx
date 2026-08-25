@@ -8,14 +8,15 @@ import { AnimatePresence, motion } from "motion/react"
 import { NavigationContext } from "../../App";
 
 interface Props {
-    drill: Drill
+    drill: Drill;
+    onPin: (id: number) => void
 }
 
 const animationSpeed = 0.3
 
-export default function DrillListItem({ drill }: Props) {
+export default function DrillListItem({ drill, onPin }: Props) {
     const [ expanded, setExpanded ] = useState(false)
-    const [ pinned, setPinned ] = useState(false)
+    // const [ pinned, setPinned ] = useState(false)
 
     const navigation = useContext(NavigationContext)
 
@@ -44,9 +45,10 @@ export default function DrillListItem({ drill }: Props) {
                     })}
                 >Edit</button>
                 <img 
-                    src={pinned ? imageFilledPin : imageHollowPin}
+                    // src={pinned ? imageFilledPin : imageHollowPin}
+                    src={drill.pinned ? imageFilledPin : imageHollowPin}
                     alt="Pin"
-                    onClick={() => setPinned(!pinned)}
+                    onClick={() => onPin(drill.id)}
                     />
             </div>
         </div>

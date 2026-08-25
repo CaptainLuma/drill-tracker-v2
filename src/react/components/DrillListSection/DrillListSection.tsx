@@ -1,19 +1,67 @@
-import { useQuery } from "@tanstack/react-query"
+import { QueryClient, useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import DrillListItem from "../DrillListItem/DrillListItem"
 import type { Drill } from "../../../shared/models/drill"
 import style from "./DrillListSection.module.css"
-import { useContext } from "react"
+import { useContext, useEffect, useState } from "react"
 import { NavigationContext } from "../../App"
 import AlertsList from "../AlertsList/AlertsList"
 import { LayoutGroup } from "motion/react"
+import { useAlerts } from "../../context/AlertContext"
 
 export default function DrillListSection() {
-    const { data: result, isLoading } = useQuery({
+    const queryClient = useQueryClient()
+    const { addAlert } = useAlerts()
+    const navigation = useContext(NavigationContext)
+
+    const { data: result, isLoading, error, isError } = useQuery({
         queryFn: () => window.api.getDrills(),
-        queryKey: ["test"],
+        queryKey: ["drills"],
     })
 
-    const navigation = useContext(NavigationContext)
+    const drills = result?.success ? result.data : null
+
+    // handle potential errors
+    useEffect(() => {
+        if (isError) {
+            addAlert({
+                message: "Failed to load drills: " + error.message,
+                type: "danger"
+            })
+        }
+
+        if (result?.success == false) {
+            addAlert({
+                message: result.error,
+                type: "danger"
+            })
+        }
+    }, [isError, error, result]);
+    
+    const { mutateAsync: editDrillMutation } = useMutation({
+        mutationFn: (drill: Drill) => window.api.editDrill(drill),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["drills"] })
+        }
+    })
+
+    async function pinDrill(id: number): Promise<void> {
+        // console.log(`pinning drill "${drills?.find(d => d.id === id)?.name}"`)
+
+        const originalDrill = drills?.find(d => d.id === id)
+        if (!originalDrill)
+            return
+
+        const editedDrill: Drill = { ...originalDrill }
+        editedDrill.pinned = !editedDrill.pinned
+
+        try {
+            await editDrillMutation(editedDrill)
+            console.log("edit successful.")
+        } catch (_) {
+            // TODO
+            console.log("edit failed.")
+        }
+    }
 
     function RenderDrillList(drills: Drill[]) {
         return (<>
@@ -23,6 +71,7 @@ export default function DrillListSection() {
                         <DrillListItem
                             key={drill.id}
                             drill={drill}
+                            onPin={pinDrill}
                         />
                     ))}
                 </div>
@@ -46,10 +95,10 @@ export default function DrillListSection() {
             >Add Drill</button>
         </div>
 
-        {isLoading ? <p>Loading...</p> : null}
+        {isLoading && <p>Loading...</p>}
 
-        {result?.success ? 
-            RenderDrillList(result?.data) : null
+        {drills &&
+            RenderDrillList(drills)
         }
     </section>)
 }

@@ -4,6 +4,7 @@ export interface Drill {
     description: string
     dateCreated: Date
     dateModified: Date
+    pinned: boolean
 }
 
 export interface NewDrill {

@@ -10,9 +10,8 @@ type DrillRow = {
     description: string
     date_created: string
     date_modified: string
+    pinned: number
 }
-
-
 
 const dataPath = path.join(app.getPath('userData'), 'data') // uncomment for production ready version
 // const dataPath = path.join(process.cwd(), 'data')
@@ -21,16 +20,47 @@ const dbPath = path.join(dataPath, 'drill-tracker.db')
 
 const db = new Database(dbPath)
 
-// Create tables if they don't already exist
-db.exec(`
-    CREATE TABLE IF NOT EXISTS drills (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT NOT NULL UNIQUE,
-        description TEXT NOT NULL,
-        date_created TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-        date_modified TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+
+function initializeDatabase() {
+    // creates database table if it doesn't already exit
+    // adds missing columns if db is outdated
+
+    db.exec(`
+        CREATE TABLE IF NOT EXISTS drills (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL UNIQUE,
+            description TEXT NOT NULL,
+            date_created TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            date_modified TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            pinned BOOL NOT NULL DEFAULT 0
+        )
+    `)
+
+    function addMissingColumn(
+        tableName: string,
+        columnName: string,
+        definition: string
+    ) {
+        const columns = db
+            .prepare(`PRAGMA table_info(${tableName})`)
+            .all() as { name: string }[]
+
+        if (!columns.some(column => column.name === columnName)) {
+            db.exec(`
+                ALTER TABLE ${tableName}
+                ADD COLUMN ${columnName} ${definition}
+            `)
+        }
+    }
+
+    addMissingColumn(
+        'drills',
+        'pinned',
+        'BOOL NOT NULL DEFAULT 0'
     )
-`)
+}
+
+initializeDatabase()
 
 export function getDrills(): Drill[] {
     const drills = db
@@ -40,9 +70,10 @@ export function getDrills(): Drill[] {
                 name, 
                 description, 
                 date_created, 
-                date_modified
+                date_modified,
+                pinned
             FROM drills
-            ORDER BY date_created DESC
+            ORDER BY pinned DESC, date_created DESC
         `)
         .all() as DrillRow[]
 
@@ -51,34 +82,37 @@ export function getDrills(): Drill[] {
         name: drill.name,
         description: drill.description,
         dateCreated: new Date(drill.date_created),
-        dateModified: new Date(drill.date_modified)
+        dateModified: new Date(drill.date_modified),
+        pinned: drill.pinned != 0
     })))
 }
 
 export function getDrill(id: number): Drill {
-    const result = db.prepare(`
+    const drill = db.prepare(`
         SELECT 
             id, 
             name, 
             description, 
             date_created,
-            date_modified
+            date_modified,
+            pinned
         FROM drills
         WHERE id = ?
         LIMIT 1
     `)
     .get(id) as DrillRow | null
 
-    if (!result) {
+    if (!drill) {
         throw new Error(`Drill with ID "${id}" does not exist`)
     }
 
     return {
-        id: result.id,
-        name: result.name,
-        description: result.description,
-        dateCreated: new Date(result.date_created),
-        dateModified: new Date(result.date_modified)
+        id: drill.id,
+        name: drill.name,
+        description: drill.description,
+        dateCreated: new Date(drill.date_created),
+        dateModified: new Date(drill.date_modified),
+        pinned: drill.pinned != 0
     }
 }
 
@@ -106,20 +140,32 @@ export function addDrill(drill: NewDrill): number {
 export function editDrill(drill: Drill): number {
     const dateModified = new Date().toISOString()
 
+    // convert to drillRow first to ensure correct types
+    const drillRow: DrillRow = {
+        id: drill.id,
+        name: drill.name,
+        description: drill.description,
+        date_created: drill.dateCreated.toISOString(),
+        date_modified: dateModified,
+        pinned: drill.pinned ? 1 : 0,
+    }
+
     db.prepare(`
         UPDATE drills
         SET 
             name = ?, 
-            description = ?
-            date_modified = ?
+            description = ?,
+            date_modified = ?,
+            pinned = ?
         WHERE 
             id = ?
     `).run(
-        drill.name,
-        drill.description,
-        dateModified,
+        drillRow.name,
+        drillRow.description,
+        drillRow.date_modified,
+        drillRow.pinned,
 
-        drill.id,
+        drillRow.id,
     )
 
     return drill.id
