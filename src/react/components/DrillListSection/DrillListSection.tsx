@@ -6,11 +6,8 @@ import style from "./DrillListSection.module.css"
 import { useContext } from "react"
 import { NavigationContext } from "../../App"
 import AlertsList from "../AlertsList/AlertsList"
-import { useAlerts } from "../../context/AlertContext"
 
 export default function DrillListSection() {
-    const { clearAlerts } = useAlerts()
-
     const { data: result, isLoading } = useQuery({
         queryFn: () => window.api.getDrills(),
         queryKey: ["test"],
@@ -39,7 +36,6 @@ export default function DrillListSection() {
         <div className={style.controls}>
             <button
                 onClick={() => {
-                    clearAlerts()
                     navigation?.navigateToPage("add drill page")
                 }}
             >Add Drill</button>

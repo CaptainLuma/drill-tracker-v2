@@ -7,17 +7,17 @@ import AlertsList from "../AlertsList/AlertsList"
 
 export default function AddDrillSection() {
     const navigation = useContext(NavigationContext)
-    const { addAlert } = useAlerts()
+    const { clearAlerts, addAlert } = useAlerts()
 
     const nameInputRef = useRef<HTMLInputElement>(null)
     const descriptionInputRef = useRef<HTMLTextAreaElement>(null)
 
     async function onAddDrillButtonClicked() {
-        // get input values
-        const name = nameInputRef.current?.value
-        const description = descriptionInputRef.current?.value
+        clearAlerts()
 
-        console.log("add button clicked.")
+        // get input values
+        const name = nameInputRef.current?.value.trim()
+        const description = descriptionInputRef.current?.value.trim()
 
         if (name == undefined || description == undefined) {
             addAlert({ message: "Please enter a drill name and description.", type: "danger" })
@@ -25,24 +25,23 @@ export default function AddDrillSection() {
         }
 
         // validate input
-        if (name.trim() == "") {
+        if (name == "") {
             addAlert({ message: "A drill name is required.", type: "danger" })
             return
         }
 
-        if (description.trim() == "") {
-            addAlert({ message: "A drill description is required.", type: "danger" })
+        const allDrills = await window.api.getDrills()
+        if (allDrills.success && allDrills.data.find(d => d.name.trim() == name)) {
+            addAlert({ message: "A drill already has this name. Please choose another name.", type: "danger"})
             return
         }
-
-        console.log("creating drill...")
 
         const drill: NewDrill = {
             name: name,
             description: description
         }
 
-        console.log("adding drill: ", drill)
+        // add drill
         const response = await window.api.addDrill(drill)
 
         if (!response.success) {
@@ -51,7 +50,7 @@ export default function AddDrillSection() {
         }
 
         // success
-        console.log(`successfully added drill with id: ${response.data}`)
+        addAlert({ message: `Successfully added drill "${drill.name}".` })
         navigation?.navigateToPage("drill list page")
     }
 

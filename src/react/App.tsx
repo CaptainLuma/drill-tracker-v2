@@ -2,7 +2,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import DrillListSection from "./components/DrillListSection/DrillListSection"
 import { useState, createContext } from "react"
 import AddDrillSection from "./components/AddDrillSection/AddDrillSection"
-import { AlertProvider } from "./context/AlertContext"
+import { AlertProvider, useAlerts } from "./context/AlertContext"
 
 type Page = "drill list page" | "add drill page"
 
@@ -15,8 +15,9 @@ export const NavigationContext = createContext<NavigationContextType | null>(nul
 
 const queryClient = new QueryClient()
 
-export default function App() {
+function AppContent() {
 	const [ openPage, setOpenPage ] = useState<Page>("drill list page")
+	const { clearAlerts } = useAlerts()
 
 	function getOpenPageComponent() {
 		switch (openPage) {
@@ -26,19 +27,26 @@ export default function App() {
 	}
 	
 	function navigateToPage(page: Page) {
+		clearAlerts()
 		setOpenPage(page)
 	}
 
 	return (<>
+		<NavigationContext.Provider value={{
+			openPage,
+			navigateToPage
+		}}>
+			{getOpenPageComponent()}
+		</NavigationContext.Provider>
+	</>)
+}
+
+export default function App() {
+	return (
 		<QueryClientProvider client={queryClient}>
 			<AlertProvider>
-				<NavigationContext.Provider value={{
-					openPage,
-					navigateToPage
-				}}>
-					{getOpenPageComponent()}
-				</NavigationContext.Provider>
+				<AppContent />
 			</AlertProvider>
 		</QueryClientProvider>
-	</>)
+	)
 }
