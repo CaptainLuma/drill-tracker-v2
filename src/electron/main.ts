@@ -1,7 +1,7 @@
 // const fs = require('node:fs/promises');
-import { app, BrowserWindow, ipcMain, webContents } from 'electron'
+import { app, BrowserWindow } from 'electron'
 import path from 'path'
-import { isDev, ipcMainHandle, ipcWebContentsSend, ipcMainOn, getErrorMessage } from './util.js'
+import { isDev, ipcMainHandle, getErrorMessage } from './util.js'
 import * as database from './database.js'
 import { Drill, NewDrill } from '../shared/models/drill.js'
 
@@ -11,7 +11,7 @@ const isMac = process.platform === 'darwin'
 let mainWindow: BrowserWindow
 
 const dataPath = path.join(app.getPath('userData'), 'data')
-// console.log(`Datapath: ${dataPath}`)
+console.log(`Datapath: ${dataPath}`)
 
 function getPreloadPath() {
     return path.join(
@@ -71,70 +71,40 @@ ipcMainHandle("test", () => {
 
 ipcMainHandle("getDrills", () => {
     try {
-        return {
-            success: true,
-            data: database.getDrills()
-        }
+        return {success: true, data: database.getDrills()}
     } catch (err) {
-        return {
-            success: false,
-            error: getErrorMessage(err)
-        }
+        return {success: false, error: getErrorMessage(err)}
     }
 })
 
 ipcMainHandle("getDrill", (_event, id: number) => {
     try {
-        return {
-            success: true,
-            data: database.getDrill(id)
-        }
+        return {success: true, data: database.getDrill(id)}
     } catch (err) {
-        return {
-            success: false,
-            error: getErrorMessage(err)
-        }
+        return {success: false, error: getErrorMessage(err)}
     }
 })
 
 ipcMainHandle("addDrill", (_event, drill: NewDrill) => {
     try {
-        return {
-            success: true,
-            data: database.addDrill(drill)
-        }
+        return {success: true, data: database.addDrill(drill)}
     } catch (err) {
-        return {
-            success: false,
-            error: getErrorMessage(err)
-        }
+        return {success: false, error: getErrorMessage(err)}
     }
 })
 
 ipcMainHandle("editDrill", (_event, drill: Drill) => {
     try {
-        return {
-            success: true,
-            data: database.editDrill(drill)
-        }
+        return {success: true, data: database.editDrill(drill)}
     } catch (err) {
-        return {
-            success: false,
-            error: getErrorMessage(err)
-        }
+        return {success: false, error: getErrorMessage(err)}
     }
 })
 
 ipcMainHandle("deleteDrill", (_event, id: number) => {
     try {
-        return {
-            success: true,
-            data: database.deleteDrill(id)
-        }
+        return {success: true, data: database.deleteDrill(id)}
     } catch (err) {
-        return {
-            success: false,
-            error: getErrorMessage(err)
-        }
+        return {success: false, error: getErrorMessage(err)}
     }
 })

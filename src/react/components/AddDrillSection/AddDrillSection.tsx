@@ -69,7 +69,8 @@ export default function AddDrillSection() {
             id: drillId!,
             name,
             description,
-            createdAt: drillResponse?.success ? drillResponse.data.createdAt : new Date()
+            dateCreated: drillResponse?.success ? drillResponse.data.dateCreated : new Date(),
+            dateModified: new Date()
         }
 
         const response = await window.api.editDrill(drill)

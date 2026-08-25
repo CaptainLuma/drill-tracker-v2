@@ -2,7 +2,8 @@ export interface Drill {
     id: number
     name: string
     description: string
-    createdAt: Date
+    dateCreated: Date
+    dateModified: Date
 }
 
 export interface NewDrill {

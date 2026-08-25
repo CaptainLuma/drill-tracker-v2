@@ -1,14 +1,15 @@
 import Database from 'better-sqlite3'
 import path from 'node:path'
 import { app } from 'electron'
-import fs, { stat } from 'node:fs'
+import fs from 'node:fs'
 import type { Drill, NewDrill } from '../shared/models/drill.js'
 
 type DrillRow = {
     id: number
     name: string
     description: string
-    created_at: string
+    date_created: string
+    date_modified: string
 }
 
 
@@ -26,7 +27,8 @@ db.exec(`
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT NOT NULL UNIQUE,
         description TEXT NOT NULL,
-        created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+        date_created TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        date_modified TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
     )
 `)
 
@@ -37,9 +39,10 @@ export function getDrills(): Drill[] {
                 id, 
                 name, 
                 description, 
-                created_at
+                date_created, 
+                date_modified
             FROM drills
-            ORDER BY created_at DESC
+            ORDER BY date_created DESC
         `)
         .all() as DrillRow[]
 
@@ -47,7 +50,8 @@ export function getDrills(): Drill[] {
         id: drill.id,
         name: drill.name,
         description: drill.description,
-        createdAt: new Date(drill.created_at)
+        dateCreated: new Date(drill.date_created),
+        dateModified: new Date(drill.date_modified)
     })))
 }
 
@@ -57,7 +61,8 @@ export function getDrill(id: number): Drill {
             id, 
             name, 
             description, 
-            created_at
+            date_created,
+            date_modified
         FROM drills
         WHERE id = ?
         LIMIT 1
@@ -72,37 +77,49 @@ export function getDrill(id: number): Drill {
         id: result.id,
         name: result.name,
         description: result.description,
-        createdAt: new Date(result.created_at)
+        dateCreated: new Date(result.date_created),
+        dateModified: new Date(result.date_modified)
     }
 }
 
 export function addDrill(drill: NewDrill): number {
-    const createdAt = new Date().toISOString()
+    const dateCreated = new Date().toISOString()
 
     const result = db.prepare(`
-        INSERT INTO drills (name, description, created_at)
-        VALUES (?, ?, ?)
+        INSERT INTO drills (
+            name, 
+            description, 
+            date_created,
+            date_modified
+        )
+        VALUES (?, ?, ?, ?)
     `).run(
         drill.name, 
         drill.description,
-        createdAt
+        dateCreated,
+        dateCreated
     )
 
     return result.lastInsertRowid as number
 }
 
 export function editDrill(drill: Drill): number {
+    const dateModified = new Date().toISOString()
+
     db.prepare(`
         UPDATE drills
         SET 
             name = ?, 
             description = ?
+            date_modified = ?
         WHERE 
             id = ?
     `).run(
         drill.name,
         drill.description,
-        drill.id
+        dateModified,
+
+        drill.id,
     )
 
     return drill.id
