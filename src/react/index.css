@@ -60,19 +60,24 @@ label {
 
 input {
     font-size: 1.125rem;
+    font-weight: 400;
+    font-family: inherit;
+    color: var(--main-text-color);
+
     background-color: var(--input-color);
     /* border: var(--border-soft); */
-    color: var(--main-text-color);
     height: 2rem;
     display: block;
 }
 
 textarea {
     font-size: 1.125rem;
+    font-weight: 400;
+    font-family: inherit;
+    color: var(--main-text-color);
+
     background-color: var(--input-color);
     /* border: var(--border-soft); */
-    color: var(--main-text-color);
-    font-family: inherit;
     width: 100%;
     resize: vertical;
     display: block;

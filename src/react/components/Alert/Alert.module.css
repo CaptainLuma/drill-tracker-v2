@@ -20,7 +20,7 @@
     background-color: var(--danger-color);
 }
 
-img {
+.alert img {
     width: 25px;
     height: auto;
     cursor: pointer;

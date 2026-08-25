@@ -1,5 +1,5 @@
 import { useContext, useEffect, useRef } from "react"
-import { NavigationContext } from "../../App"
+import { ConfirmModalContext, NavigationContext } from "../../App"
 import style from "./AddDrillSection.module.css"
 import type { Drill, NewDrill } from "../../../shared/models/drill"
 import { useAlerts } from "../../context/AlertContext"
@@ -8,12 +8,15 @@ import { useQuery, useQueryClient } from "@tanstack/react-query"
 
 export default function AddDrillSection() {
     const navigation = useContext(NavigationContext)
+    const confirmModal = useContext(ConfirmModalContext)
+
     const { clearAlerts, addAlert } = useAlerts()
     const queryClient = useQueryClient()
 
     const drillId = navigation?.navigationState.page == "add drill page"
         ? navigation.navigationState.drillId
         : null
+    const addEditMode = drillId == null ? "add" : "edit"
 
     const nameInputRef = useRef<HTMLInputElement>(null)
     const descriptionInputRef = useRef<HTMLTextAreaElement>(null)
@@ -86,6 +89,16 @@ export default function AddDrillSection() {
         if (drillId == null)
             return
 
+        // ask user to confirm action
+        if (confirmModal) {
+            const userResponse = await confirmModal.openConfirmModal("Are you sure you want to delete this drill? Are you sure you want to delete this drill? Are you sure you want to delete this drill? Are you sure you want to delete this drill? Are you sure you want to delete this drill?")
+
+            if (!userResponse) {
+                return
+            }
+        }
+        
+
         const response = await window.api.deleteDrill(drillId)
 
         if (!response.success) {
@@ -119,7 +132,7 @@ export default function AddDrillSection() {
             return
         }
 
-        const succeeded = drillId === null
+        const succeeded = addEditMode == "add"
             ? await addDrill(name, description)
             : await editDrill(name, description)
 
@@ -148,13 +161,16 @@ export default function AddDrillSection() {
 
         <div className="flex">
             <button
-                onClick={onAddDrillButtonClicked}>Add</button>
+                onClick={onAddDrillButtonClicked}
+            >{addEditMode == "add" ? "Add" : "Edit"}</button>
+
             <button
                 onClick={() => navigation?.navigateToPage({
                     page: "drill list page"
                 })}
             >Cancel</button>
-            { drillId !== null &&
+
+            {drillId !== null &&
                 <button
                     className={style.deleteButton}
                     onClick={onDeleteDrillButtonClicked}

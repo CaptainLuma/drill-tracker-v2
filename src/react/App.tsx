@@ -1,8 +1,9 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import DrillListSection from "./components/DrillListSection/DrillListSection"
-import { useState, createContext } from "react"
+import { useRef, useState, createContext } from "react"
 import AddDrillSection from "./components/AddDrillSection/AddDrillSection"
 import { AlertProvider, useAlerts } from "./context/AlertContext"
+import ConfirmModal from "./components/ConfirmModal/ConfirmModal"
 
 // type Page = "drill list page" | "add drill page"
 
@@ -18,7 +19,16 @@ type NavigationContextType = {
 	navigateToPage: (navigationState: NavigationState, removeAlerts?: boolean) => void
 }
 
+type ConfirmModalState = {
+	message: string
+} | null
+
+type ConfirmModalContextType = {
+	openConfirmModal: (message: string) => Promise<boolean>
+}
+
 export const NavigationContext = createContext<NavigationContextType | null>(null)
+export const ConfirmModalContext = createContext<ConfirmModalContextType | null>(null)
 
 const queryClient = new QueryClient()
 
@@ -38,8 +48,39 @@ function AppContent() {
 	const [ navigationState, setNavigationState ] = useState<NavigationState>({
 		page: "drill list page"
 	})
+
+	const [ confirmModalState, setConfirmModalState ] = useState<ConfirmModalState>(null)
+	const confirmResolverRef = useRef<((response: boolean) => void) | null>(null)
 	
 	const { clearAlerts } = useAlerts()
+	
+	function navigateToPage(navigationState: NavigationState, removeAlerts = true) {
+		if (removeAlerts) clearAlerts()
+		setNavigationState(navigationState)
+	}
+
+	function openConfirmModal(message: string): Promise<boolean> {
+		confirmResolverRef.current?.(false) // if a confirm modal is opened before the previous is closed, this will resolve the previous confirmation as false
+
+		return new Promise(resolve => {
+			confirmResolverRef.current = resolve
+			setConfirmModalState({ message })
+		})
+	}
+
+	function closeConfirmModal(response: boolean) {
+		setConfirmModalState(null)
+		confirmResolverRef.current?.(response)
+		confirmResolverRef.current = null
+	}
+
+	function onConfirmModalNo() {
+		closeConfirmModal(false)
+	}
+
+	function onConfirmModalYes() {
+		closeConfirmModal(true)
+	}
 
 	function getOpenPageComponent() {
 		switch (navigationState.page) {
@@ -47,18 +88,27 @@ function AppContent() {
 			case "add drill page": return <AddDrillSection />;
 		}
 	}
-	
-	function navigateToPage(navigationState: NavigationState, removeAlerts = true) {
-		if (removeAlerts) clearAlerts()
-		setNavigationState(navigationState)
-	}
 
 	return (<>
 		<NavigationContext.Provider value={{
 			navigationState: navigationState,
 			navigateToPage: navigateToPage
 		}}>
-			{getOpenPageComponent()}
+			<ConfirmModalContext value={{
+				openConfirmModal: openConfirmModal
+			}}>
+				{getOpenPageComponent()}
+			</ConfirmModalContext>
+
+			{ confirmModalState &&
+				<ConfirmModal
+					message={confirmModalState.message}
+					onNo={onConfirmModalNo}
+					onYes={onConfirmModalYes}
+				/>
+			}
+			
+
 		</NavigationContext.Provider>
 	</>)
 }
