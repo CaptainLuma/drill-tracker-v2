@@ -1,21 +1,90 @@
-import { useContext, useRef } from "react"
+import { useContext, useEffect, useRef } from "react"
 import { NavigationContext } from "../../App"
 import style from "./AddDrillSection.module.css"
-import type { NewDrill } from "../../../shared/models/drill"
+import type { Drill, NewDrill } from "../../../shared/models/drill"
 import { useAlerts } from "../../context/AlertContext"
 import AlertsList from "../AlertsList/AlertsList"
+import { useQuery, useQueryClient } from "@tanstack/react-query"
 
 export default function AddDrillSection() {
     const navigation = useContext(NavigationContext)
     const { clearAlerts, addAlert } = useAlerts()
+    const queryClient = useQueryClient()
+
+    const drillId = navigation?.navigationState.page == "add drill page"
+        ? navigation.navigationState.drillId
+        : null
 
     const nameInputRef = useRef<HTMLInputElement>(null)
     const descriptionInputRef = useRef<HTMLTextAreaElement>(null)
 
+    const { data: drillResponse } = useQuery({
+        queryKey: ["drill", drillId],
+        queryFn: () => window.api.getDrill(drillId!),
+        enabled: drillId !== null,
+    })
+
+    useEffect(() => {
+        if (drillId === null) {
+            nameInputRef.current!.value = ""
+            descriptionInputRef.current!.value = ""
+            return
+        }
+
+        if (drillResponse?.success) {
+            const drillToEdit = drillResponse.data
+            nameInputRef.current!.value = drillToEdit.name
+            descriptionInputRef.current!.value = drillToEdit.description
+        }
+    }, [drillId, drillResponse])
+
+    async function onAddDrill(name: string, description: string): Promise<boolean> {
+        const allDrills = await window.api.getDrills()
+        if (allDrills.success && allDrills.data.find(d => d.name.trim() == name)) {
+            addAlert({ message: "A drill already has this name. Please choose another name.", type: "danger"})
+            return false
+        }
+
+        const drill: NewDrill = {
+            name,
+            description
+        }
+
+        const response = await window.api.addDrill(drill)
+
+        if (!response.success) {
+            addAlert({ message: response.error, type: "danger" })
+            return false
+        }
+
+        addAlert({ message: `Successfully added drill "${drill.name}".` })
+        return true
+    }
+
+    async function onEditDrill(name: string, description: string): Promise<boolean> {
+        const drill: Drill = {
+            id: drillId!,
+            name,
+            description,
+            createdAt: drillResponse?.success ? drillResponse.data.createdAt : new Date()
+        }
+
+        const response = await window.api.editDrill(drill)
+
+        if (!response.success) {
+            addAlert({ message: response.error, type: "danger" })
+            return false
+        }
+
+        await queryClient.invalidateQueries({ queryKey: ["drill", drillId] })
+
+        addAlert({ message: `Successfully edited drill "${drill.name}".` })
+        return true
+    }
+
     async function onAddDrillButtonClicked() {
         clearAlerts()
 
-        // get input values
         const name = nameInputRef.current?.value.trim()
         const description = descriptionInputRef.current?.value.trim()
 
@@ -24,38 +93,25 @@ export default function AddDrillSection() {
             return
         }
 
-        // validate input
         if (name == "") {
             addAlert({ message: "A drill name is required.", type: "danger" })
             return
         }
 
-        const allDrills = await window.api.getDrills()
-        if (allDrills.success && allDrills.data.find(d => d.name.trim() == name)) {
-            addAlert({ message: "A drill already has this name. Please choose another name.", type: "danger"})
+        const succeeded = drillId === null
+            ? await onAddDrill(name, description)
+            : await onEditDrill(name, description)
+
+        if (!succeeded)
             return
-        }
 
-        const drill: NewDrill = {
-            name: name,
-            description: description
-        }
-
-        // add drill
-        const response = await window.api.addDrill(drill)
-
-        if (!response.success) {
-            addAlert({ message: response.error, type: "danger" })
-            return
-        }
-
-        // success
-        addAlert({ message: `Successfully added drill "${drill.name}".` })
-        navigation?.navigateToPage("drill list page")
+        navigation?.navigateToPage({
+            page: "drill list page"
+        })
     }
 
     return (<section className={style.addDrillSection}>
-        <h1>Add Drill</h1>
+        <h1>{drillId !== null ? "Edit Drill" : "Add Drill"}</h1>
 
         <AlertsList />
 
@@ -73,7 +129,9 @@ export default function AddDrillSection() {
             <button
                 onClick={onAddDrillButtonClicked}>Add</button>
             <button
-                onClick={() => navigation?.navigateToPage("drill list page")}
+                onClick={() => navigation?.navigateToPage({
+                    page: "drill list page"
+                })}
             >Cancel</button>
         </div>
         

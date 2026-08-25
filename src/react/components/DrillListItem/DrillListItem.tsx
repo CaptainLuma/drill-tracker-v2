@@ -1,10 +1,11 @@
 import type { Drill } from "../../../shared/models/drill";
-import { useState } from "react";
+import { useContext, useState } from "react";
 import style from "./DrillListItem.module.css"
 import imageDropdown from "../../../assets/images/dropdown.svg"
 import imageHollowPin from "../../../assets/images/pin-hollow.svg"
 import imageFilledPin from "../../../assets/images/pin-filled.svg"
 import { AnimatePresence, motion } from "motion/react"
+import { NavigationContext } from "../../App";
 
 interface Props {
     drill: Drill
@@ -15,6 +16,8 @@ const animationSpeed = 0.3
 export default function DrillListItem({ drill }: Props) {
     const [ expanded, setExpanded ] = useState(false)
     const [ pinned, setPinned ] = useState(false)
+
+    const navigation = useContext(NavigationContext)
 
     return (<motion.div
         className={style.drillListItem}
@@ -34,7 +37,12 @@ export default function DrillListItem({ drill }: Props) {
                 />
             <h3>{drill.name}</h3>
             <div className={style.headerControls}>
-                <button>Edit</button>
+                <button
+                    onClick={() => navigation?.navigateToPage({
+                        page: "add drill page",
+                        drillId: drill.id
+                    })}
+                >Edit</button>
                 <img 
                     src={pinned ? imageFilledPin : imageHollowPin}
                     alt="Pin"

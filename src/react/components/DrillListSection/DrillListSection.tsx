@@ -38,7 +38,10 @@ export default function DrillListSection() {
         <div className={style.controls}>
             <button
                 onClick={() => {
-                    navigation?.navigateToPage("add drill page")
+                    navigation?.navigateToPage({
+                        page: "add drill page",
+                        drillId: null
+                    })
                 }}
             >Add Drill</button>
         </div>

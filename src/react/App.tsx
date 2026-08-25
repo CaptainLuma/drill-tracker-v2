@@ -4,11 +4,18 @@ import { useState, createContext } from "react"
 import AddDrillSection from "./components/AddDrillSection/AddDrillSection"
 import { AlertProvider, useAlerts } from "./context/AlertContext"
 
-type Page = "drill list page" | "add drill page"
+// type Page = "drill list page" | "add drill page"
+
+type NavigationState = {
+	page: "drill list page"
+} | {
+	page: "add drill page"
+	drillId: number | null
+}
 
 type NavigationContextType = {
-	openPage: Page,
-	navigateToPage: (page: Page) => void
+	navigationState: NavigationState,
+	navigateToPage: (navigationState: NavigationState) => void
 }
 
 export const NavigationContext = createContext<NavigationContextType | null>(null)
@@ -28,25 +35,28 @@ export default function App() {
 
 
 function AppContent() {
-	const [ openPage, setOpenPage ] = useState<Page>("drill list page")
+	const [ navigationState, setNavigationState ] = useState<NavigationState>({
+		page: "drill list page"
+	})
+	
 	const { clearAlerts } = useAlerts()
 
 	function getOpenPageComponent() {
-		switch (openPage) {
+		switch (navigationState.page) {
 			case "drill list page": return <DrillListSection />;
 			case "add drill page": return <AddDrillSection />;
 		}
 	}
 	
-	function navigateToPage(page: Page) {
+	function navigateToPage(navigationState: NavigationState) {
 		clearAlerts()
-		setOpenPage(page)
+		setNavigationState(navigationState)
 	}
 
 	return (<>
 		<NavigationContext.Provider value={{
-			openPage,
-			navigateToPage
+			navigationState: navigationState,
+			navigateToPage: navigateToPage
 		}}>
 			{getOpenPageComponent()}
 		</NavigationContext.Provider>
