@@ -15,7 +15,7 @@ type NavigationState = {
 
 type NavigationContextType = {
 	navigationState: NavigationState,
-	navigateToPage: (navigationState: NavigationState) => void
+	navigateToPage: (navigationState: NavigationState, removeAlerts?: boolean) => void
 }
 
 export const NavigationContext = createContext<NavigationContextType | null>(null)
@@ -48,8 +48,8 @@ function AppContent() {
 		}
 	}
 	
-	function navigateToPage(navigationState: NavigationState) {
-		clearAlerts()
+	function navigateToPage(navigationState: NavigationState, removeAlerts = true) {
+		if (removeAlerts) clearAlerts()
 		setNavigationState(navigationState)
 	}
 

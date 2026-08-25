@@ -85,6 +85,14 @@ textarea {
     gap: 15px;
 }
 
+.info {
+    background-color: var(--info-color);
+}
+
+.danger {
+    background-color: var(--danger-color);
+}
+
 .formHorizontalDiv {
     display: grid;
     grid-template-columns: auto 1fr;

@@ -38,7 +38,7 @@ export default function AddDrillSection() {
         }
     }, [drillId, drillResponse])
 
-    async function onAddDrill(name: string, description: string): Promise<boolean> {
+    async function addDrill(name: string, description: string): Promise<boolean> {
         const allDrills = await window.api.getDrills()
         if (allDrills.success && allDrills.data.find(d => d.name.trim() == name)) {
             addAlert({ message: "A drill already has this name. Please choose another name.", type: "danger"})
@@ -61,7 +61,7 @@ export default function AddDrillSection() {
         return true
     }
 
-    async function onEditDrill(name: string, description: string): Promise<boolean> {
+    async function editDrill(name: string, description: string): Promise<boolean> {
         const drill: Drill = {
             id: drillId!,
             name,
@@ -82,6 +82,27 @@ export default function AddDrillSection() {
         return true
     }
 
+    async function onDeleteDrillButtonClicked() {
+        if (drillId == null)
+            return
+
+        const response = await window.api.deleteDrill(drillId)
+
+        if (!response.success) {
+            addAlert({ message: response.error, type: "danger" })
+            return false
+        }
+
+        clearAlerts()
+        if (drillResponse?.success) {
+            addAlert({ message: `Successfully deleted drill "${drillResponse.data.name}".` })
+        }
+        
+        navigation?.navigateToPage({
+            page: "drill list page"
+        }, false)
+    }
+
     async function onAddDrillButtonClicked() {
         clearAlerts()
 
@@ -99,15 +120,15 @@ export default function AddDrillSection() {
         }
 
         const succeeded = drillId === null
-            ? await onAddDrill(name, description)
-            : await onEditDrill(name, description)
+            ? await addDrill(name, description)
+            : await editDrill(name, description)
 
         if (!succeeded)
             return
 
         navigation?.navigateToPage({
             page: "drill list page"
-        })
+        }, false)
     }
 
     return (<section className={style.addDrillSection}>
@@ -116,12 +137,12 @@ export default function AddDrillSection() {
         <AlertsList />
 
         <div className="formHorizontalDiv">
-            <label>Drill Name:</label>
+            <label>Name:</label>
             <input ref={nameInputRef} type="text" />
         </div>
 
         <div className="mv-2">
-            <label className="mv-1">Drill Name:</label>
+            <label className="mv-1">Description:</label>
             <textarea ref={descriptionInputRef} rows={5}></textarea>
         </div>
 
@@ -133,6 +154,13 @@ export default function AddDrillSection() {
                     page: "drill list page"
                 })}
             >Cancel</button>
+            { drillId !== null &&
+                <button
+                    className={style.deleteButton}
+                    onClick={onDeleteDrillButtonClicked}
+                >Delete</button>
+            }
+            
         </div>
         
     </section>)
