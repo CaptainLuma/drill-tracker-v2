@@ -91,7 +91,7 @@ export default function AddDrillSection() {
 
         // ask user to confirm action
         if (confirmModal) {
-            const userResponse = await confirmModal.openConfirmModal("Are you sure you want to delete this drill? Are you sure you want to delete this drill? Are you sure you want to delete this drill? Are you sure you want to delete this drill? Are you sure you want to delete this drill?")
+            const userResponse = await confirmModal.openConfirmModal("Are you sure you want to delete this drill?")
 
             if (!userResponse) {
                 return

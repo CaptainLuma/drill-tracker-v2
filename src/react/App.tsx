@@ -21,10 +21,11 @@ type NavigationContextType = {
 
 type ConfirmModalState = {
 	message: string
+	forceYes?: boolean
 } | null
 
 type ConfirmModalContextType = {
-	openConfirmModal: (message: string) => Promise<boolean>
+	openConfirmModal: (message: string, forceYes?: boolean) => Promise<boolean>
 }
 
 export const NavigationContext = createContext<NavigationContextType | null>(null)
@@ -59,12 +60,15 @@ function AppContent() {
 		setNavigationState(navigationState)
 	}
 
-	function openConfirmModal(message: string): Promise<boolean> {
+	function openConfirmModal(message: string, forceYes?: boolean): Promise<boolean> {
 		confirmResolverRef.current?.(false) // if a confirm modal is opened before the previous is closed, this will resolve the previous confirmation as false
 
 		return new Promise(resolve => {
 			confirmResolverRef.current = resolve
-			setConfirmModalState({ message })
+			setConfirmModalState({ 
+				message: message,
+				forceYes: forceYes
+			})
 		})
 	}
 
@@ -105,6 +109,7 @@ function AppContent() {
 					message={confirmModalState.message}
 					onNo={onConfirmModalNo}
 					onYes={onConfirmModalYes}
+					forceYes={confirmModalState.forceYes}
 				/>
 			}
 			
