@@ -74,6 +74,13 @@ export default function AddDrillSection() {
             pinned: false,
         }
 
+        // ensure unique name:
+        const allDrills = await window.api.getDrills()
+        if (allDrills.success && allDrills.data.find(d => d.name.trim() == name && d.id !== drill.id)) {
+            addAlert({ message: "A drill already has this name. Please choose another name.", type: "danger"})
+            return false
+        }
+
         const response = await window.api.editDrill(drill)
 
         if (!response.success) {
