@@ -35,7 +35,7 @@ export function getErrorMessage(error: unknown): string {
 
     const errorMessage = error.message.toLowerCase()
 
-    // return errorMessage
+    return errorMessage
 
     if (errorMessage.includes("does not exist"))
         return "The drill could not be found."

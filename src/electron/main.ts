@@ -4,6 +4,7 @@ import path from 'path'
 import { isDev, ipcMainHandle, getErrorMessage } from './util.js'
 import * as database from './database.js'
 import { Drill, NewDrill } from '../shared/models/drill.js'
+import { Event, NewEvent } from '../shared/models/event.js'
 
 // const isDev = !app.isPackaged;
 const isMac = process.platform === 'darwin'
@@ -77,7 +78,7 @@ ipcMainHandle("getDrills", () => {
     }
 })
 
-ipcMainHandle("getDrill", (_event, id: number) => {
+ipcMainHandle("getDrill", (_, id: number) => {
     try {
         return {success: true, data: database.getDrill(id)}
     } catch (err) {
@@ -85,7 +86,7 @@ ipcMainHandle("getDrill", (_event, id: number) => {
     }
 })
 
-ipcMainHandle("addDrill", async (_event, drill: NewDrill) => {
+ipcMainHandle("addDrill", async (_, drill: NewDrill) => {
     try {
         return {success: true, data: await database.addDrill(drill)}
     } catch (err) {
@@ -93,7 +94,7 @@ ipcMainHandle("addDrill", async (_event, drill: NewDrill) => {
     }
 })
 
-ipcMainHandle("editDrill", async (_event, drill: Drill) => {
+ipcMainHandle("editDrill", async (_, drill: Drill) => {
     try {
         return {success: true, data: await database.editDrill(drill)}
     } catch (err) {
@@ -101,10 +102,69 @@ ipcMainHandle("editDrill", async (_event, drill: Drill) => {
     }
 })
 
-ipcMainHandle("deleteDrill", async (_event, id: number) => {
+ipcMainHandle("deleteDrill", async (_, id: number) => {
     try {
         return {success: true, data: await database.deleteDrill(id)}
     } catch (err) {
         return {success: false, error: getErrorMessage(err)}
     }
 })
+
+ipcMainHandle("getEvents", () => {
+    try {
+        return {success: true, data: database.getEvents()}
+    } catch (err) {
+        return {success: false, error: getErrorMessage(err)}
+    }
+})
+
+ipcMainHandle("getEvent", (_, id: number) => {
+    try {
+        return {success: true, data: database.getEvent(id)}
+    } catch (err) {
+        return {success: false, error: getErrorMessage(err)}
+    }
+})
+
+ipcMainHandle("addEvent", async (_, event: NewEvent) => {
+    try {
+        return {success: true, data: await database.addEvent(event)}
+    } catch (err) {
+        return {success: false, error: getErrorMessage(err)}
+    }
+})
+
+ipcMainHandle("editEvent", async (_, event: Event) => {
+    try {
+        return {success: true, data: await database.editEvent(event)}
+    } catch (err) {
+        return {success: false, error: getErrorMessage(err)}
+    }
+})
+
+ipcMainHandle("deleteEvent", async (_, id: number) => {
+    try {
+        return {success: true, data: await database.deleteEvent(id)}
+    } catch (err) {
+        return {success: false, error: getErrorMessage(err)}
+    }
+})
+
+
+
+// temp
+// async function addEvents() {
+//     await database.addEvent({
+//         name: "Event 1",
+//         color: "#1a48c7"
+//     })
+//     await database.addEvent({
+//         name: "Event 2",
+//         color: "#481ac7"
+//     })
+//     await database.addEvent({
+//         name: "Event 3",
+//         color: "#8416b7"
+//     })
+// }
+// addEvents()

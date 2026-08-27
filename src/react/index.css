@@ -1,6 +1,7 @@
 :root {
     --main-background-color: #222222;
     --main-text-color: #EEEEEE;
+    --shallow-text-color: #999999;
     --secondary-background-color: #333333;
     --third-background-color: #444444;
     --border-soft: 2px solid #777777;
