@@ -27,10 +27,15 @@ export function ipcMainOn<Key extends keyof EventPayloadMapping>(
 }
 
 export function getErrorMessage(error: unknown): string {
-    if (!(error instanceof Error))
-        return "Something went wrong. Please try again."
+    console.log(error)
+
+    if (!(error instanceof Error)) {
+        return String(error)
+    }
 
     const errorMessage = error.message.toLowerCase()
+
+    // return errorMessage
 
     if (errorMessage.includes("does not exist"))
         return "The drill could not be found."
@@ -74,5 +79,5 @@ export function getErrorMessage(error: unknown): string {
     if (errorMessage.includes("i/o error") || errorMessage.includes("disk i/o error"))
         return "The database could not be accessed."
 
-    return "Something went wrong. Please try again."
+    return errorMessage
 }

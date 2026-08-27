@@ -3,6 +3,9 @@ import path from 'node:path'
 import { app } from 'electron'
 import fs from 'node:fs'
 import type { Drill, NewDrill } from '../shared/models/drill.js'
+import { drizzle } from 'drizzle-orm/better-sqlite3'
+import * as table from './drizzle/schema.js'
+import { eq } from 'drizzle-orm'
 
 type DrillRow = {
     id: number
@@ -13,19 +16,61 @@ type DrillRow = {
     pinned: number
 }
 
+type EventRow = {
+    id: number
+    name: string
+    date_created: string
+    date_modified: string
+}
+
 const dataPath = path.join(app.getPath('userData'), 'data') // uncomment for production ready version
 // const dataPath = path.join(process.cwd(), 'data')
 fs.mkdirSync(dataPath, { recursive: true }) // ensure that data folder exists
 const dbPath = path.join(dataPath, 'drill-tracker.db')
 
-const db = new Database(dbPath)
+const sqlite = new Database(dbPath)
 
+initializeDatabase()
+
+const db = drizzle({ client: sqlite })
 
 function initializeDatabase() {
+    initializeDrillTable()
+    // initializeEventTable()
+}
+
+function addMissingColumn(
+    tableName: string,
+    columnName: string,
+    definition: string
+) {
+    const identifierPattern = /^[A-Za-z_][A-Za-z0-9_]*$/
+    const definitionPattern = /^[A-Za-z0-9_ ]+$/
+
+    if (!identifierPattern.test(tableName) || !identifierPattern.test(columnName)) {
+        throw new Error('Invalid table or column name')
+    }
+
+    if (!definitionPattern.test(definition)) {
+        throw new Error('Invalid column definition')
+    }
+
+    const columns = sqlite
+        .prepare(`PRAGMA table_info("${tableName}")`)
+        .all() as { name: string }[]
+
+    if (!columns.some(column => column.name === columnName)) {
+        sqlite.exec(`
+            ALTER TABLE "${tableName}"
+            ADD COLUMN "${columnName}" ${definition}
+        `)
+    }
+}
+
+function initializeDrillTable() {
     // creates database table if it doesn't already exit
     // adds missing columns if db is outdated
-
-    db.exec(`
+    sqlite.exec(`
         CREATE TABLE IF NOT EXISTS drills (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             name TEXT NOT NULL UNIQUE,
@@ -36,23 +81,6 @@ function initializeDatabase() {
         )
     `)
 
-    function addMissingColumn(
-        tableName: string,
-        columnName: string,
-        definition: string
-    ) {
-        const columns = db
-            .prepare(`PRAGMA table_info(${tableName})`)
-            .all() as { name: string }[]
-
-        if (!columns.some(column => column.name === columnName)) {
-            db.exec(`
-                ALTER TABLE ${tableName}
-                ADD COLUMN ${columnName} ${definition}
-            `)
-        }
-    }
-
     addMissingColumn(
         'drills',
         'pinned',
@@ -60,122 +88,113 @@ function initializeDatabase() {
     )
 }
 
-initializeDatabase()
+// function initializeEventTable() {
+//     // creates database table if it doesn't already exit
+//     // adds missing columns if db is outdated
+//     db.exec(`
+//         CREATE TABLE IF NOT EXISTS events (
+//             id INTEGER PRIMARY KEY AUTOINCREMENT,
+//             name TEXT NOT NULL UNIQUE,
+//             color TEXT NOT NULL CHECK (color ~ '^#[0-9A-Fa-f]{6}$')
+//             date_created TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+//             date_modified TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+//         )
+//     `)
+
+//     addMissingColumn(
+//         'events',
+//         'date_modified',
+//         'TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP'
+//     )
+// }
 
 export function getDrills(): Drill[] {
-    const drills = db
-        .prepare(`
-            SELECT 
-                id, 
-                name, 
-                description, 
-                date_created, 
-                date_modified,
-                pinned
-            FROM drills
-            ORDER BY pinned DESC, date_created DESC
-        `)
-        .all() as DrillRow[]
+    const result = db
+        .select()
+        .from(table.drills)
+        .all()
 
-    return drills.map((drill => ({
+    return result.map((drill => ({
         id: drill.id,
         name: drill.name,
         description: drill.description,
-        dateCreated: new Date(drill.date_created),
-        dateModified: new Date(drill.date_modified),
-        pinned: drill.pinned != 0
+        dateCreated: new Date(drill.dateCreated),
+        dateModified: new Date(drill.dateModified),
+        pinned: drill.pinned,
     })))
 }
 
 export function getDrill(id: number): Drill {
-    const drill = db.prepare(`
-        SELECT 
-            id, 
-            name, 
-            description, 
-            date_created,
-            date_modified,
-            pinned
-        FROM drills
-        WHERE id = ?
-        LIMIT 1
-    `)
-    .get(id) as DrillRow | null
-
-    if (!drill) {
-        throw new Error(`Drill with ID "${id}" does not exist`)
-    }
+    const drill = db
+        .select()
+        .from(table.drills)
+        .where(eq(table.drills.id, id))
+        .get()
+    
+    if (!drill)
+        throw new Error(`No drill with id: ${id}`)
 
     return {
         id: drill.id,
         name: drill.name,
         description: drill.description,
-        dateCreated: new Date(drill.date_created),
-        dateModified: new Date(drill.date_modified),
-        pinned: drill.pinned != 0
+        dateCreated: new Date(drill.dateCreated),
+        dateModified: new Date(drill.dateModified),
+        pinned: drill.pinned,
     }
 }
 
-export function addDrill(drill: NewDrill): number {
+export async function addDrill(drill: NewDrill): Promise<number> {
     const dateCreated = new Date().toISOString()
 
-    const result = db.prepare(`
-        INSERT INTO drills (
-            name, 
-            description, 
-            date_created,
-            date_modified
-        )
-        VALUES (?, ?, ?, ?)
-    `).run(
-        drill.name, 
-        drill.description,
-        dateCreated,
-        dateCreated
-    )
+    const result = await db
+        .insert(table.drills)
+        .values({
+            name: drill.name,
+            description: drill.description,
+            dateCreated: dateCreated,
+            dateModified: dateCreated
+        })
+        .returning({
+            id: table.drills.id
+        })
 
-    return result.lastInsertRowid as number
+    if (result.length == 0)
+        throw new Error("no result from table insert")
+
+    return result[0].id
 }
 
-export function editDrill(drill: Drill): number {
+export async function editDrill(drill: Drill): Promise<number> {
     const dateModified = new Date().toISOString()
 
-    // convert to drillRow first to ensure correct types
-    const drillRow: DrillRow = {
-        id: drill.id,
-        name: drill.name,
-        description: drill.description,
-        date_created: drill.dateCreated.toISOString(),
-        date_modified: dateModified,
-        pinned: drill.pinned ? 1 : 0,
-    }
-
-    db.prepare(`
-        UPDATE drills
-        SET 
-            name = ?, 
-            description = ?,
-            date_modified = ?,
-            pinned = ?
-        WHERE 
-            id = ?
-    `).run(
-        drillRow.name,
-        drillRow.description,
-        drillRow.date_modified,
-        drillRow.pinned,
-
-        drillRow.id,
-    )
-
-    return drill.id
+    const result = await db
+        .update(table.drills)
+        .set({
+            name: drill.name,
+            description: drill.description,
+            dateModified: dateModified,
+            pinned: drill.pinned,
+        })
+        .where(eq(table.drills.id, drill.id))
+        .returning({
+            id: table.drills.id
+        })
+    
+    if (result.length == 0)
+        throw new Error("no result from table edit")
+    
+    return result[0].id
 }
 
-export function deleteDrill(id: number): number {
-    db.prepare(`
-        DELETE FROM drills
-        WHERE id = ?
-    `).run(id)
-
-    return id
+export async function deleteDrill(id: number): Promise<number> {
+    const result = await db
+        .delete(table.drills)
+        .where(eq(table.drills.id, id))
+        .returning({ id: table.drills.id })
+    
+    if (result.length == 0)
+        throw new Error("no result from table edit")
+    
+    return result[0].id
 }

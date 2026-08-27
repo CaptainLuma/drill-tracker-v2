@@ -17,8 +17,8 @@ declare global {
         test: string,
         getDrills: IpcResult<Drill[]>,
         getDrill: IpcResult<Drill>,
-        addDrill: IpcResult<number>,
-        editDrill: IpcResult<number>,
-        deleteDrill: IpcResult<number>
+        addDrill: Promise<IpcResult<number>>,
+        editDrill: Promise<IpcResult<number>>,
+        deleteDrill: Promise<IpcResult<number>>
     }
 }

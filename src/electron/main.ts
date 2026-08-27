@@ -85,25 +85,25 @@ ipcMainHandle("getDrill", (_event, id: number) => {
     }
 })
 
-ipcMainHandle("addDrill", (_event, drill: NewDrill) => {
+ipcMainHandle("addDrill", async (_event, drill: NewDrill) => {
     try {
-        return {success: true, data: database.addDrill(drill)}
+        return {success: true, data: await database.addDrill(drill)}
     } catch (err) {
         return {success: false, error: getErrorMessage(err)}
     }
 })
 
-ipcMainHandle("editDrill", (_event, drill: Drill) => {
+ipcMainHandle("editDrill", async (_event, drill: Drill) => {
     try {
-        return {success: true, data: database.editDrill(drill)}
+        return {success: true, data: await database.editDrill(drill)}
     } catch (err) {
         return {success: false, error: getErrorMessage(err)}
     }
 })
 
-ipcMainHandle("deleteDrill", (_event, id: number) => {
+ipcMainHandle("deleteDrill", async (_event, id: number) => {
     try {
-        return {success: true, data: database.deleteDrill(id)}
+        return {success: true, data: await database.deleteDrill(id)}
     } catch (err) {
         return {success: false, error: getErrorMessage(err)}
     }
