@@ -5,6 +5,7 @@ import { isDev, ipcMainHandle, getErrorMessage } from './util.js'
 import * as database from './database.js'
 import { Drill, NewDrill } from '../shared/models/drill.js'
 import { Event, NewEvent } from '../shared/models/event.js'
+import { Level, NewLevel } from '../shared/models/level.js'
 
 // const isDev = !app.isPackaged;
 const isMac = process.platform === 'darwin'
@@ -65,10 +66,6 @@ app.whenReady().then(() => {
 })
 
 
-
-ipcMainHandle("test", () => {
-    return "This is a test to retrieve data from the backend. If this text is rendered to the UI, it means the data was successfully retrieved from the main process.";
-})
 
 ipcMainHandle("getDrills", () => {
     try {
@@ -150,21 +147,43 @@ ipcMainHandle("deleteEvent", async (_, id: number) => {
     }
 })
 
+ipcMainHandle("getLevels", () => {
+    try {
+        return {success: true, data: database.getLevels()}
+    } catch (err) {
+        return {success: false, error: getErrorMessage(err)}
+    }
+})
 
+ipcMainHandle("getLevel", (_, id: number) => {
+    try {
+        return {success: true, data: database.getLevel(id)}
+    } catch (err) {
+        return {success: false, error: getErrorMessage(err)}
+    }
+})
 
-// temp
-// async function addEvents() {
-//     await database.addEvent({
-//         name: "Event 1",
-//         color: "#1a48c7"
-//     })
-//     await database.addEvent({
-//         name: "Event 2",
-//         color: "#481ac7"
-//     })
-//     await database.addEvent({
-//         name: "Event 3",
-//         color: "#8416b7"
-//     })
-// }
-// addEvents()
+ipcMainHandle("addLevel", async (_, level: NewLevel) => {
+    try {
+        return {success: true, data: await database.addLevel(level)}
+    } catch (err) {
+        return {success: false, error: getErrorMessage(err)}
+    }
+})
+
+ipcMainHandle("editLevel", async (_, level: Level) => {
+    try {
+        return {success: true, data: await database.editLevel(level)}
+    } catch (err) {
+        return {success: false, error: getErrorMessage(err)}
+    }
+})
+
+ipcMainHandle("deleteLevel", async (_, id: number) => {
+    try {
+        return {success: true, data: await database.deleteLevel(id)}
+    } catch (err) {
+        return {success: false, error: getErrorMessage(err)}
+    }
+})
+

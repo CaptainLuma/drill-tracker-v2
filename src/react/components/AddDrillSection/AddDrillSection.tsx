@@ -88,8 +88,10 @@ export default function AddDrillSection() {
         }
 
         const drill: NewDrill = {
-            name,
-            description
+            name: name,
+            description: description,
+            events: eventButtonData ? eventButtonData.filter(e => e.toggled).map(e => e.id) : [],
+            levels: [] // TODO
         }
 
         const response = await window.api.addDrill(drill)
@@ -104,6 +106,14 @@ export default function AddDrillSection() {
     }
 
     async function editDrill(name: string, description: string): Promise<boolean> {
+        if (!eventButtonData)
+            return false
+        if (!events)
+            return false
+
+        const eventIds = eventButtonData.filter(x => x.toggled).map(x => x.id)
+        // const levelIds = levelButtonData.filter(x => x.toggled).map(x => x.id)
+
         const drill: Drill = {
             id: drillId!,
             name,
@@ -111,6 +121,9 @@ export default function AddDrillSection() {
             dateCreated: drillResponse?.success ? drillResponse.data.dateCreated : new Date(),
             dateModified: new Date(),
             pinned: false,
+            events:  events.filter(x => eventIds.includes(x.id)),
+            levels: []
+            // levels:  levels.filter(x => levelIds.includes(x.id)),
         }
 
         // ensure unique name:

@@ -71,6 +71,11 @@ input {
     display: block;
 }
 
+input[type="color"] {
+    padding: 0px;
+    border: none;
+}
+
 textarea {
     font-size: 1.125rem;
     font-weight: 400;

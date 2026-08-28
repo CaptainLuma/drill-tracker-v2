@@ -1,4 +1,5 @@
-// import type { Event } from "./event"
+import type { Event } from "./event.js"
+import type { Level } from "./level.js"
 
 export interface Drill {
     id: number
@@ -7,11 +8,13 @@ export interface Drill {
     dateCreated: Date
     dateModified: Date
     pinned: boolean
-    // events: Event[]
+    events: (Event | null)[]
+    levels: (Level | null)[]
 }
 
 export interface NewDrill {
     name: string
     description: string
-    // events: number[]
+    events: number[]
+    levels: number[]
 }
