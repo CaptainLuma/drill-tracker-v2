@@ -5,11 +5,16 @@ import type { Drill, NewDrill } from "../../../shared/models/drill"
 import { useAlerts } from "../../context/AlertContext"
 import AlertsList from "../AlertsList/AlertsList"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
+import AddEditTagModal from "../AddEditTagModal/AddEditTagModal"
 
 type ButtonData = {
     id: number,
     toggled: boolean
 }
+
+type TagModalState = {
+	mode: "add" | "edit"
+} | null
 
 export default function AddDrillSection() {
     const navigation = useContext(NavigationContext)
@@ -27,6 +32,8 @@ export default function AddDrillSection() {
     const descriptionInputRef = useRef<HTMLTextAreaElement>(null)
 
     const [ eventButtonData, setEventButtonData ] = useState<ButtonData[] | null>(null)
+
+    const [ tagModalState, setTagModalState ] = useState<TagModalState>(null)
 
     // get drill data (if in edit mode)
     const { data: drillResponse } = useQuery({
@@ -216,9 +223,11 @@ export default function AddDrillSection() {
                 <label className="mv-1">Events:</label>
                 <button 
                     className={style.tagControlButton}
+                    onClick={() => setTagModalState({ mode: "add" })}
                 >Add</button>
                 <button
                     className={style.tagControlButton}
+                    onClick={() => setTagModalState({ mode: "edit" })}
                 >Edit</button>
             </div>
             
@@ -262,6 +271,14 @@ export default function AddDrillSection() {
             }
             
         </div>
+
+        {tagModalState &&
+            <AddEditTagModal
+                mode={tagModalState.mode}
+                onClose={() => setTagModalState(null)}
+                events={events}
+            />
+        }
         
     </section>)
 }
