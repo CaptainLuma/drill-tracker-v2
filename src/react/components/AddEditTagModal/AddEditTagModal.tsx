@@ -1,12 +1,16 @@
-import { useRef, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import style from "./AddEditTagModal.module.css"
-import type { Event, NewEvent } from "../../../shared/models/event"
+import type { Event } from "../../../shared/models/event"
 import { useQueryClient } from "@tanstack/react-query"
+import type { IpcResult } from "../../../shared/ipc"
+import type { Level } from "../../../shared/models/level"
 
 interface Props {
     mode: "add" | "edit",
+    tagType: "event" | "level"
     onClose: () => void,
     events: Event[] | null
+    levels: Level[] | null
 }
 
 export default function AddEditTagModal(props: Props) {
@@ -17,14 +21,22 @@ export default function AddEditTagModal(props: Props) {
     const nameInputRef = useRef<HTMLInputElement>(null)
     const colorInputRef = useRef<HTMLInputElement>(null)
     const tagSelectRef = useRef<HTMLSelectElement>(null)
+
+    useEffect(() => {
+        autoFillInputs()
+    }, [nameInputRef, colorInputRef, tagSelectRef])
     
     async function addTag(name: string, color: string) {
-        const event: NewEvent = {
+        const tag = {
             name: name,
             color: color,
         }
 
-        const response = await window.api.addEvent(event)
+        let response: IpcResult<number>
+        if (props.tagType == "event")
+            response = await window.api.addEvent(tag)
+        else
+            response = await window.api.addLevel(tag)
 
         if (!response.success) {
             setAlertMessage(response.error)
@@ -35,7 +47,7 @@ export default function AddEditTagModal(props: Props) {
     }
 
     async function editTag(id: number, name: string, color: string) {
-        const event: Event = {
+        const tag = {
             id: id,
             name: name,
             color: color,
@@ -43,7 +55,11 @@ export default function AddEditTagModal(props: Props) {
             dateModified: new Date(),
         }
 
-        const response = await window.api.editEvent(event)
+        let response: IpcResult<number>
+        if (props.tagType == "event")
+            response = await window.api.editEvent(tag)
+        else
+            response = await window.api.editLevel(tag)
 
         if (!response.success) {
             setAlertMessage(response.error)
@@ -83,9 +99,9 @@ export default function AddEditTagModal(props: Props) {
         
         if (success) {
             queryClient.invalidateQueries({
-                queryKey: ["events"],
+                queryKey: props.tagType == "event" ? ["events"] : ["levels"]
             });
-
+            
             props.onClose()
         }
     }
@@ -105,24 +121,39 @@ export default function AddEditTagModal(props: Props) {
         }
     }
 
+    function getTagOptionElements() {
+        const tags: Event[] | Level[] | null = props.tagType == "event" ? props.events : props.levels
+
+        if (!tags) return null
+
+        return tags.map(tag => (
+            <option
+                key={tag.id}
+                value={tag.id}
+            >{tag.name}</option>
+        ))
+    }
+
     function autoFillInputs() {
         const id = tagSelectRef.current ? Number(tagSelectRef.current.value) : null
         if (!id) return
 
         if (props.mode == "edit" && 
-            props.events && 
+            props.events &&
+            props.levels &&
             nameInputRef.current && 
             colorInputRef.current
         ) {
-            const event = props.events.find(e => e.id === id)
-            if (!event) return
+            const tag = props.tagType == "event" ? 
+                props.events.find(e => e.id === id) : 
+                props.levels.find(e => e.id === id)
+            
+            if (!tag) return
 
-            nameInputRef.current.value = event.name
-            colorInputRef.current.value = event.color
+            nameInputRef.current.value = tag.name
+            colorInputRef.current.value = tag.color
         }
     }
-
-    autoFillInputs()
 
     return (<>
         <div className={style.background}>
@@ -133,17 +164,12 @@ export default function AddEditTagModal(props: Props) {
 
                 { props.mode == "edit" && props.events &&
                     <div className="formHorizontalDiv">
-                        <label>Event to Edit:</label>
+                        <label>{props.tagType == "event" ? "Event" : "Level"} to Edit:</label>
                         <select 
                             ref={tagSelectRef}
                             onChange={autoFillInputs}
                         >
-                            { props.events.map(event => (
-                                <option
-                                    key={event.id}
-                                    value={event.id}
-                                >{event.name}</option>
-                            )) }
+                            { getTagOptionElements() }
                         </select>
                     </div>
                 }

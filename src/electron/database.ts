@@ -78,7 +78,10 @@ export async function addDrill(drill: NewDrill): Promise<number> {
             name: drill.name,
             description: drill.description,
             dateCreated: dateCreated,
-            dateModified: dateCreated
+            dateModified: dateCreated,
+            pinned: false,
+            events: drill.events,
+            levels: drill.levels
         })
         .returning({
             id: table.drills.id
@@ -100,6 +103,8 @@ export async function editDrill(drill: Drill): Promise<number> {
             description: drill.description,
             dateModified: dateModified,
             pinned: drill.pinned,
+            events: drill.events.filter(x => x != null).map(x => x.id),
+            levels: drill.levels.filter(x => x != null).map(x => x.id)
         })
         .where(eq(table.drills.id, drill.id))
         .returning({

@@ -10,13 +10,18 @@
 
 .header {
     display: grid;
-    grid-template-columns: auto 1fr auto;
+    /* grid-template-columns: auto 1fr auto; */
+    grid-template-columns: auto 1fr auto auto;
     gap: 10px;
     align-items: center;
 
     border-bottom: var(--border-soft);
     background-color: var(--third-background-color);
     padding: 5px 10px;
+}
+
+.headerPinned {
+    background-color: var(--fourth-background-color)
 }
 
 .header img {
@@ -33,7 +38,12 @@
 
 .body {
     border-bottom: var(--border-soft);
-    padding: 10px;
+    padding: 20px;
+}
+
+.body p {
+    margin: 0px;
+    margin-bottom: 15px;
 }
 
 .bodyWrapper {

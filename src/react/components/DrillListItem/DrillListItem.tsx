@@ -12,7 +12,8 @@ interface Props {
     onPin: (id: number) => void
 }
 
-const animationSpeed = 0.3
+const animationMovementSpeed = 0.3
+const animationInOutSpeed = 0.1
 
 export default function DrillListItem({ drill, onPin }: Props) {
     const [ expanded, setExpanded ] = useState(false)
@@ -23,20 +24,35 @@ export default function DrillListItem({ drill, onPin }: Props) {
     return (<motion.div
         className={style.drillListItem}
         layout="position"
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -8 }}
         transition={{
+            duration: animationInOutSpeed,
+            ease: "easeInOut",
             layout: {
-                duration: animationSpeed,
+                duration: animationMovementSpeed,
                 ease: "easeInOut"
             }
         }}
     >
-        <div className={style.header}>
+        <div className={`${style.header} ${drill.pinned ? style.headerPinned : ""}`}>
             <img
                 src={imageDropdown} 
                 alt="expand" 
                 onClick={() => setExpanded(!expanded)}
-                />
+            />
             <h3>{drill.name}</h3>
+            <div className="tagContainer">
+                { drill.events.filter(x => x != null).map(event => (
+                    <button
+                        key={event.id}
+                        className="tag activeTag"
+                        style={{ backgroundColor: event.color }}
+                    >{event.name}</button>
+                )) }
+            </div>
+            
             <div className={style.headerControls}>
                 <button
                     onClick={() => navigation?.navigateToPage({
@@ -60,10 +76,24 @@ export default function DrillListItem({ drill, onPin }: Props) {
                     initial={{ height: 0 }}
                     animate={{ height: "auto" }}
                     exit={{ height: 0 }}
-                    transition={{ duration: animationSpeed, ease: "easeInOut" }}
+                    transition={{ duration: animationMovementSpeed, ease: "easeInOut" }}
                 >
                     <div className={style.body}>
                         <p>{drill.description}</p>
+
+                        { drill.levels && drill.levels.length > 0 && <>
+                            <h4>Levels:</h4>
+                            <div className="tagContainer">
+                                { drill.levels.filter(x => x != null).map(level => (
+                                    <button
+                                        key={level.id}
+                                        className="tag activeTag"
+                                        style={{ backgroundColor: level.color }}
+                                    >{level.name}</button>
+                                )) }
+                            </div>
+                        </>}
+                        
                     </div>
                 </motion.div>
             )}

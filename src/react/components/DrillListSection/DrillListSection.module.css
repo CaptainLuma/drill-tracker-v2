@@ -5,7 +5,7 @@
     margin-bottom: 500px;
 }
 
-.controls {
+.controlButtons {
     display: flex;
     flex-wrap: wrap;
     gap: 15px;

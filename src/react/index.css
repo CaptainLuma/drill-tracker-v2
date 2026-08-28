@@ -4,6 +4,7 @@
     --shallow-text-color: #999999;
     --secondary-background-color: #333333;
     --third-background-color: #444444;
+    --fourth-background-color: #555555;
     --border-soft: 2px solid #777777;
     --primary-button-color: rgb(12, 149, 161);
     --input-color: #444444;
@@ -35,6 +36,12 @@ h1 {
 
 h3 {
     font-weight: 400;
+}
+
+h4 {
+    font-weight: 700;
+    font-size: 1.125rem;
+    margin: 10px 0px;
 }
 
 p {
@@ -97,6 +104,28 @@ select {
     font-size: inherit;
 }
 
+.tagContainer {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+}
+
+.tag {
+    display: block;
+    border-radius: 1000px;
+    /* 16px --> 14px */
+    font-size: 0.875rem;
+    font-weight: 300;
+    padding: 6px 13px;
+    background-color: rgb(60, 60, 60);
+    color: rgb(200, 200, 200);
+    cursor: default;
+}
+
+.activeTag {
+    color: white;
+}
+
 .flex {
     display: flex;
     flex-direction: row;
@@ -145,4 +174,8 @@ select {
 
 .mb-3 {
     margin-bottom: 30px;
+}
+
+.clickable {
+    cursor: pointer;
 }
