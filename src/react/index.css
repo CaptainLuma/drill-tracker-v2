@@ -21,11 +21,20 @@
     box-sizing: border-box;
 }
 
+html {
+    /* stop scrollbar from shifting contents of page */
+    overflow-x: hidden;
+    margin-right: calc(-1 * (100vw - 100%));
+}
+
 body {
     margin: 0;
     font-family: Calibri, 'Gill Sans', 'Gill Sans MT', 'Trebuchet MS', sans-serif;
     background-color: var(--main-background-color);
     color: var(--main-text-color);
+
+    /* remove scrollbar changing page position */
+    /* padding-left: calc(100vw - 100%); */
 }
 
 h1 {
@@ -73,7 +82,8 @@ input {
     color: var(--main-text-color);
 
     background-color: var(--input-color);
-    /* border: var(--border-soft); */
+    border: var(--border-soft);
+    border-width: 1px;
     height: 2rem;
     display: block;
 }
@@ -102,6 +112,7 @@ select {
     color: var(--main-text-color);
     padding: 2px 10px;
     font-size: inherit;
+    height: 2rem;
 }
 
 .tagContainer {

@@ -2,12 +2,27 @@
     width: calc(100% - 50px);
     max-width: 1100px;
     margin: auto;
-    margin-bottom: 500px;
+    margin-bottom: 300px;
 }
 
-.controlButtons {
+.controls {
     display: flex;
     flex-wrap: wrap;
     gap: 15px;
     margin-bottom: 15px;
+    justify-content: space-between;
+    align-items: center;
 }
+
+.searchControls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    padding: 0;
+}
+
+/* .searchControls select, 
+.searchControls input {
+    
+} */

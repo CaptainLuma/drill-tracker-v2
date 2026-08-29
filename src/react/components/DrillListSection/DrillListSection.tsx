@@ -13,6 +13,27 @@ type TagFilter = {
     toggled: boolean
 }
 
+type SearchType = "name" | "description" | "name description"
+type SearchOptionInfo = {
+    value: SearchType
+    displayName: string
+}
+
+const searchOptions: SearchOptionInfo[] = [
+    {
+        value: "name",
+        displayName: "Name:"
+    },
+    {
+        value: "description",
+        displayName: "Description:"
+    },
+    {
+        value: "name description",
+        displayName: "Name & Desc:"
+    }
+]
+
 export default function DrillListSection() {
     const queryClient = useQueryClient()
     const { addAlert } = useAlerts()
@@ -59,6 +80,9 @@ export default function DrillListSection() {
     const [ eventFilters, setEventFilters ] = useState<TagFilter[] | null>(null)
     const [ levelFilters, setLevelFilters ] = useState<TagFilter[] | null>(null)
 
+    const [ searchType, setSearchType ] = useState<SearchType>(searchOptions[0].value)
+    const [ searchString, setSearchString ] = useState<string>("")
+
     useEffect(() => {
         if (!events || !levels)
             return
@@ -80,6 +104,7 @@ export default function DrillListSection() {
     function filterAndSortDrills(drills: Drill[]) {
         let filteredDrills = drills.map(d => d) // copy
 
+        // apply event filters
         let selectedEvents = eventFilters?.filter(x => x.toggled).map(x => x.id)
         if (selectedEvents && selectedEvents.length > 0) {
             selectedEvents.forEach(eventId => {
@@ -87,12 +112,33 @@ export default function DrillListSection() {
             })
         }
 
+        // apply level filters
         let selectedLevels = levelFilters?.filter(x => x.toggled).map(x => x.id)
         if (selectedLevels && selectedLevels.length > 0) {
             selectedLevels.forEach(levelId => {
                 filteredDrills = filteredDrills.filter(d => d.pinned || d.levels.find(e => e?.id === levelId) != undefined)
             })
         }
+
+        // apply search filter
+        let searchTerms = searchString.trim().toLowerCase().split(" ")
+        filteredDrills = filteredDrills.filter(drill => {
+            if (drill.pinned)
+                return true
+
+            let textToSearch
+
+            if (searchType == "name") {
+                textToSearch = drill.name
+            } else if (searchType == "description") {
+                textToSearch = drill.description
+            } else {
+                textToSearch = drill.name + " " + drill.description
+            }
+
+            // return if name or description includes at least one of the terms
+            return searchTerms.some(term => textToSearch.toLowerCase().includes(term)); 
+        })
 
         const sortedDrills = filteredDrills.sort((a, b) => {
             // if (a.pinned !== b.pinned) {
@@ -117,6 +163,8 @@ export default function DrillListSection() {
             queryClient.invalidateQueries({ queryKey: ["drills"] })
         }
     })
+
+    
 
     async function pinDrill(id: number): Promise<void> {
         // console.log(`pinning drill "${drills?.find(d => d.id === id)?.name}"`)
@@ -213,7 +261,36 @@ export default function DrillListSection() {
             </div>
         </div>
 
-        <div className={style.controlButtons}>
+        <div className={style.controls}>
+            <div className={style.searchControls}>
+                <label>Search by</label>
+                <select
+                    onChange={(event) => {
+                        setSearchType(event.target.value as SearchType)
+                    }}
+                >
+                    { searchOptions.map(x => (
+                        <option
+                            key={x.value}
+                            value={x.value}
+                        >{x.displayName}</option>
+                    )) }
+                </select>
+                <input 
+                    type="text"
+                    onChange={(event) => {
+                        setSearchString(event.target.value)
+                    }}
+                />
+                {/* <input 
+                    type="number" 
+                    min="0" 
+                    step="1"
+                >
+
+                </input> */}
+            </div>
+            
             <button
                 onClick={() => {
                     navigation?.navigateToPage({
@@ -226,7 +303,7 @@ export default function DrillListSection() {
 
         {isLoading && <p>Loading...</p>}
 
-        {drills && drills.length > 0 &&
+        {drills &&
             RenderDrillList(drills)
         }
     </section>)
