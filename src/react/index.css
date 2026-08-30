@@ -115,28 +115,6 @@ select {
     height: 2rem;
 }
 
-.tagContainer {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 5px;
-}
-
-.tag {
-    display: block;
-    border-radius: 1000px;
-    /* 16px --> 14px */
-    font-size: 0.875rem;
-    font-weight: 300;
-    padding: 6px 13px;
-    background-color: rgb(60, 60, 60);
-    color: rgb(200, 200, 200);
-    cursor: default;
-}
-
-.activeTag {
-    color: white;
-}
-
 .flex {
     display: flex;
     flex-direction: row;

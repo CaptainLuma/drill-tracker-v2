@@ -6,6 +6,7 @@ import imageHollowPin from "../../../assets/images/pin-hollow.svg"
 import imageFilledPin from "../../../assets/images/pin-filled.svg"
 import { AnimatePresence, motion } from "motion/react"
 import { NavigationContext } from "../../App";
+import TagList from "../TagList/TagList";
 
 interface Props {
     drill: Drill;
@@ -42,7 +43,7 @@ export default function DrillListItem({ drill, onPin }: Props) {
                 onClick={() => setExpanded(!expanded)}
             />
             <h3>{drill.name}</h3>
-            <div className="tagContainer">
+            {/* <div className="tagContainer">
                 { drill.events.filter(x => x != null).map(event => (
                     <button
                         key={event.id}
@@ -50,7 +51,11 @@ export default function DrillListItem({ drill, onPin }: Props) {
                         style={{ backgroundColor: event.color }}
                     >{event.name}</button>
                 )) }
-            </div>
+            </div> */}
+            <TagList
+                tags={drill.events.filter(x => x != null)}
+                notButtons={true}
+            />
             
             <div className={style.headerControls}>
                 <button
@@ -82,7 +87,7 @@ export default function DrillListItem({ drill, onPin }: Props) {
 
                         { drill.levels && drill.levels.length > 0 && <>
                             <h4>Levels:</h4>
-                            <div className="tagContainer">
+                            {/* <div className="tagContainer">
                                 { drill.levels.filter(x => x != null).map(level => (
                                     <button
                                         key={level.id}
@@ -90,7 +95,11 @@ export default function DrillListItem({ drill, onPin }: Props) {
                                         style={{ backgroundColor: level.color }}
                                     >{level.name}</button>
                                 )) }
-                            </div>
+                            </div> */}
+                            <TagList
+                                tags={drill.levels.filter(x => x != null)}
+                                notButtons={true}
+                            />
                         </>}
                         
                     </div>

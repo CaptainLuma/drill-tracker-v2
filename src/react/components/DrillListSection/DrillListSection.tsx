@@ -5,8 +5,10 @@ import style from "./DrillListSection.module.css"
 import { useContext, useEffect, useMemo, useState } from "react"
 import { NavigationContext } from "../../App"
 import AlertsList from "../AlertsList/AlertsList"
-import { AnimatePresence, LayoutGroup } from "motion/react"
+import { LayoutGroup } from "motion/react"
 import { useAlerts } from "../../context/AlertContext"
+import TagList from "../TagList/TagList"
+import imageDice from "../../../assets/images/dice (3).svg"
 
 type TagFilter = {
     id: number,
@@ -245,34 +247,25 @@ export default function DrillListSection() {
 
         <div className="formHorizontalDiv">
             <label>Filter by events:</label>
-            <div className="tagContainer">
-                { events && events.map(event => (
-                    <button
-                        key={event.id}
-                        className="tag clickable"
-                        onClick={() => applyTagFilter("event", event.id)}
-                        style={eventFilters?.find(filter => filter.id === event.id)?.toggled
-                            ? { backgroundColor: event.color, color: "#FFFFFF" }
-                            : undefined}
-                    >{ event.name }</button>
-                )) }
-            </div>
+            { events && eventFilters &&
+                <TagList
+                    tags={events}
+                    toggleData={eventFilters}
+                    onTagClicked={(id) => applyTagFilter("event", id)}
+                />
+            }
         </div>
 
         <div className="formHorizontalDiv">
             <label>Filter by levels:</label>
-            <div className="tagContainer">
-                { levels && levels.map(level => (
-                    <button
-                        key={level.id}
-                        className="tag clickable"
-                        onClick={() => applyTagFilter("level", level.id)}
-                        style={levelFilters?.find(filter => filter.id === level.id)?.toggled
-                            ? { backgroundColor: level.color, color: "#FFFFFF" }
-                            : undefined}
-                    >{ level.name }</button>
-                )) }
-            </div>
+
+            { levels && levelFilters &&
+                <TagList
+                    tags={levels}
+                    toggleData={levelFilters}
+                    onTagClicked={(id) => applyTagFilter("level", id)}
+                />
+            }
         </div>
 
         <div className={style.controls}>
@@ -296,6 +289,7 @@ export default function DrillListSection() {
                         setSearchString(event.target.value)
                     }}
                 />
+                <label>Top:</label>
                 <input 
                     className={style.resultLimitInput}
                     type="number" 
@@ -308,6 +302,11 @@ export default function DrillListSection() {
                         
                         setResultLimit(limit)
                     }}
+                />
+                <img 
+                    className={style.inlineImageButton}
+                    src={imageDice} 
+                    alt="randomize" 
                 />
             </div>
             

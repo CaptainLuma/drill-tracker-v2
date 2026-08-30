@@ -6,8 +6,8 @@ import { useAlerts } from "../../context/AlertContext"
 import AlertsList from "../AlertsList/AlertsList"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import AddEditTagModal from "../AddEditTagModal/AddEditTagModal"
-import TagList from "../TagList/TagList"
-import type { TagListRef } from "../TagList/TagList"
+import TagListState from "../TagListState/TagListState"
+import type { TagListRef } from "../TagListState/TagListState"
 
 type TagModalState = {
 	mode: "add" | "edit"
@@ -219,7 +219,7 @@ export default function AddDrillSection() {
             </div>
 
             { events &&
-                <TagList
+                <TagListState
                     tags={events}
                     toggledTags={ addEditMode == "add" ? [] : (drillResponse?.success ? drillResponse.data.events.filter(t => t != null) : []) }
                     ref={eventButtonsRef}
@@ -242,7 +242,7 @@ export default function AddDrillSection() {
             </div>
 
             { levels &&
-                <TagList
+                <TagListState
                     tags={levels}
                     toggledTags={ addEditMode == "add" ? [] : (drillResponse?.success ? drillResponse.data.levels.filter(t => t != null) : []) }
                     ref={levelButtonsRef}

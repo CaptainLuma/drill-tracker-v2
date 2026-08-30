@@ -1,5 +1,4 @@
-import { useEffect, useImperativeHandle, useState, type Ref } from "react"
-// import style from "./TagList.module.css"
+import style from "./TagList.module.css"
 
 interface Tag {
     id: number
@@ -14,56 +13,31 @@ interface TagButtonData {
     toggled: boolean
 }
 
-export type TagListRef = {
-    getToggledTags: () => number[]
-}
-
 interface Props {
     tags: Tag[]
-    toggledTags: Tag[]
-    ref: Ref<TagListRef>
+    toggleData?: TagButtonData[]
+    onTagClicked?: (id: number) => void
+    notButtons?: boolean
 }
 
-export default function TagList({ tags, toggledTags, ref }: Props) {
-    const toggledIds = new Set(toggledTags.map(t => t.id))
+export default function TagList({ tags, toggleData = [], onTagClicked, notButtons = false }: Props) {
+    function getButtonStyle(tag: Tag) {
+        if (notButtons)
+            return { backgroundColor: tag.color, color: "#FFFFFF" }
 
-    const [ tagButtons, setTagButtons ] = useState<TagButtonData[]>(tags.map(t => ({
-        id: t.id, 
-        toggled: toggledIds.has(t.id)
-    })))
-
-    // update tagButtonData when the toggledTags prop is changed
-    useEffect(() => {
-        const toggledIds = new Set(toggledTags.map(t => t.id))
-        
-        setTagButtons(tags.map(t => ({
-            id: t.id, 
-            toggled: toggledIds.has(t.id)
-        })))
-    }, [tags, toggledTags]) 
-
-    useImperativeHandle(ref, () => ({
-        getToggledTags: () => {
-            return tagButtons.filter(t => t.toggled).map(t => t.id)
-        },
-    }), [tagButtons])
-
-    function handleTagToggled(id: number) {
-        setTagButtons(prev => prev.map(item =>
-            item.id === id ? { ...item, toggled: !item.toggled } : item
-        ))
+        return toggleData.find(b => b.id === tag.id)?.toggled ? 
+            { backgroundColor: tag.color, color: "#FFFFFF" }
+            : undefined
     }
 
-    return (<div className="tagContainer">
+    return (<div className={style.tagContainer}>
         {tags && 
             tags.map(tag => (
                 <button
                     key={tag.id}
-                    className="tag clickable"
-                    onClick={() => handleTagToggled(tag.id)}
-                    style={tagButtons.find(b => b.id === tag.id)?.toggled
-                        ? { backgroundColor: tag.color, color: "#FFFFFF" }
-                        : undefined}
+                    className={`${style.tag} clickable`}
+                    onClick={() => onTagClicked?.(tag.id)}
+                    style={getButtonStyle(tag)}
                 >{tag.name}</button>
             ))
         }
