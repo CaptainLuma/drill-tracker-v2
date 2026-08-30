@@ -6,11 +6,8 @@ import { useAlerts } from "../../context/AlertContext"
 import AlertsList from "../AlertsList/AlertsList"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import AddEditTagModal from "../AddEditTagModal/AddEditTagModal"
-
-type ButtonData = {
-    id: number,
-    toggled: boolean
-}
+import TagList from "../TagList/TagList"
+import type { TagListRef } from "../TagList/TagList"
 
 type TagModalState = {
 	mode: "add" | "edit"
@@ -32,10 +29,10 @@ export default function AddDrillSection() {
     const nameInputRef = useRef<HTMLInputElement>(null)
     const descriptionInputRef = useRef<HTMLTextAreaElement>(null)
 
-    const [ eventButtonData, setEventButtonData ] = useState<ButtonData[] | null>(null)
-    const [ levelButtonData, setLevelButtonData ] = useState<ButtonData[] | null>(null)
-
     const [ tagModalState, setTagModalState ] = useState<TagModalState>(null)
+
+    const eventButtonsRef = useRef<TagListRef>(null)
+    const levelButtonsRef = useRef<TagListRef>(null)
 
     // get drill data (if in edit mode)
     const { data: drillResponse } = useQuery({
@@ -73,50 +70,6 @@ export default function AddDrillSection() {
         }
     }, [drillId, drillResponse])
 
-    // reset tag data if needed
-    useEffect(() => {
-        // only run code if once we have events, levels
-        if (!events || !levels) return
-
-        if (addEditMode == "add") {
-            // deactivate all tag buttons
-            setEventButtonData(
-                events.map(event => ({
-                    id: event.id,
-                    toggled: false
-                }))
-            )
-
-            setLevelButtonData(
-                levels.map(level => ({
-                    id: level.id,
-                    toggled: false
-                }))
-            )
-        } else {
-            // toggle tag buttons for tags that the drill contains
-            if (!drillResponse?.success) return
-            
-            const eventsMap = new Map(drillResponse.data.events.filter(obj => obj != null).map(obj => [obj.id, obj]))
-            const levelsMap = new Map(drillResponse.data.levels.filter(obj => obj != null).map(obj => [obj.id, obj]))
-
-            setEventButtonData(
-                events.map(event => ({
-                    id: event.id,
-                    toggled: eventsMap.has(event.id)
-                }))
-            )
-
-            setLevelButtonData(
-                levels.map(level => ({
-                    id: level.id,
-                    toggled: levelsMap.has(level.id)
-                }))
-            )
-        }
-
-    }, [events, levels, drillResponse])
-
     async function addDrill(name: string, description: string): Promise<boolean> {
         const allDrills = await window.api.getDrills()
         if (allDrills.success && allDrills.data.find(d => d.name.trim() == name)) {
@@ -127,8 +80,8 @@ export default function AddDrillSection() {
         const drill: NewDrill = {
             name: name,
             description: description,
-            events: eventButtonData ? eventButtonData.filter(x => x.toggled).map(x => x.id) : [],
-            levels: levelButtonData ? levelButtonData.filter(x => x.toggled).map(x => x.id) : []
+            events: eventButtonsRef.current?.getToggledTags() ?? [],
+            levels: levelButtonsRef.current?.getToggledTags() ?? []
         }
 
         const response = await window.api.addDrill(drill)
@@ -143,11 +96,14 @@ export default function AddDrillSection() {
     }
 
     async function editDrill(name: string, description: string): Promise<boolean> {
-        if (!eventButtonData || !levelButtonData || !events || !levels)
+        if (!events || !levels)
             return false
 
-        const eventIds = eventButtonData.filter(x => x.toggled).map(x => x.id)
-        const levelIds = levelButtonData.filter(x => x.toggled).map(x => x.id)
+        const eventIds = eventButtonsRef.current?.getToggledTags()
+        const levelIds = levelButtonsRef.current?.getToggledTags()
+
+        if (!eventIds || !levelIds)
+            return false
 
         const drill: Drill = {
             id: drillId!,
@@ -238,28 +194,6 @@ export default function AddDrillSection() {
         }, false)
     }
 
-    function handleTagToggled(tagType: "event" | "level", id: number) {
-        const tagButtonData = tagType == "event" ? eventButtonData : levelButtonData
-
-        if (!tagButtonData) return
-
-        // create copy of data
-        const tagData = tagButtonData.map(item => ({ ...item }));
-
-        const tag = tagData.find(x => x.id === id)
-        if (!tag) {
-            console.log(`no tag data attached to this button. Type: "${tagType}", Id: ${id}`)
-            return
-        }
-
-        tag.toggled = !tag.toggled
-
-        if (tagType == "event")
-            setEventButtonData(tagData)
-        else
-            setLevelButtonData(tagData)
-    }
-
     return (<section className={style.addDrillSection}>
         <h1>{drillId !== null ? "Edit Drill" : "Add Drill"}</h1>
 
@@ -283,21 +217,14 @@ export default function AddDrillSection() {
                     onClick={() => setTagModalState({ mode: "edit", tagType: "event" })}
                 >Edit</button>
             </div>
-            
-            <div className="tagContainer">
-                {events && 
-                    events.map(event => (
-                        <button
-                            key={event.id}
-                            className="tag clickable"
-                            onClick={() => handleTagToggled("event", event.id)}
-                            style={eventButtonData?.find(buttonData => buttonData.id === event.id)?.toggled
-                                ? { backgroundColor: event.color, color: "#FFFFFF" }
-                                : undefined}
-                        >{event.name}</button>
-                    ))
-                }
-            </div>
+
+            { events &&
+                <TagList
+                    tags={events}
+                    toggledTags={ addEditMode == "add" ? [] : (drillResponse?.success ? drillResponse.data.events.filter(t => t != null) : []) }
+                    ref={eventButtonsRef}
+                />
+            }
         </div>
 
         {/* levels */}
@@ -313,21 +240,14 @@ export default function AddDrillSection() {
                     onClick={() => setTagModalState({ mode: "edit", tagType: "level" })}
                 >Edit</button>
             </div>
-            
-            <div className="tagContainer">
-                {levels && 
-                    levels.map(level => (
-                        <button
-                            key={level.id}
-                            className="tag clickable"
-                            onClick={() => handleTagToggled("level", level.id)}
-                            style={levelButtonData?.find(buttonData => buttonData.id === level.id)?.toggled
-                                ? { backgroundColor: level.color, color: "#FFFFFF" }
-                                : undefined}
-                        >{level.name}</button>
-                    ))
-                }
-            </div>
+
+            { levels &&
+                <TagList
+                    tags={levels}
+                    toggledTags={ addEditMode == "add" ? [] : (drillResponse?.success ? drillResponse.data.levels.filter(t => t != null) : []) }
+                    ref={levelButtonsRef}
+                />
+            }
         </div>
 
         <div className="mv-2">
