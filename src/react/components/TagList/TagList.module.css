@@ -15,3 +15,7 @@
     color: rgb(200, 200, 200);
     cursor: default;
 }
+
+.tag.clickable {
+    cursor: pointer;
+}

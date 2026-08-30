@@ -9,6 +9,7 @@ import { LayoutGroup } from "motion/react"
 import { useAlerts } from "../../context/AlertContext"
 import TagList from "../TagList/TagList"
 import imageDice from "../../../assets/images/dice (3).svg"
+import { shuffle } from "../../../shared/helpers"
 
 type TagFilter = {
     id: number,
@@ -40,6 +41,8 @@ export default function DrillListSection() {
     const queryClient = useQueryClient()
     const { addAlert } = useAlerts()
     const navigation = useContext(NavigationContext)
+
+    const [ drills, setDrills ] = useState<Drill[]>([])
 
     const { data: result, isLoading, error, isError } = useQuery({
         queryFn: () => window.api.getDrills(),
@@ -105,14 +108,17 @@ export default function DrillListSection() {
         )
     }, [events, levels])
 
-    function filterAndSortDrills(drills: Drill[]) {
-        let result = [...drills]
+    function filterAndSortDrills(randomOrder = false) {
+        if (!result?.success)
+            return
+
+        let drillList = [...result.data]
 
         // apply event filters
         const selectedEvents = eventFilters?.filter(x => x.toggled).map(x => x.id)
         if (selectedEvents && selectedEvents.length > 0) {
             selectedEvents.forEach(eventId => {
-                result = result.filter(d => d.pinned || d.events.find(e => e?.id === eventId) != undefined)
+                drillList = drillList.filter(d => d.pinned || d.events.find(e => e?.id === eventId) != undefined)
             })
         }
 
@@ -120,13 +126,13 @@ export default function DrillListSection() {
         const selectedLevels = levelFilters?.filter(x => x.toggled).map(x => x.id)
         if (selectedLevels && selectedLevels.length > 0) {
             selectedLevels.forEach(levelId => {
-                result = result.filter(d => d.pinned || d.levels.find(e => e?.id === levelId) != undefined)
+                drillList = drillList.filter(d => d.pinned || d.levels.find(e => e?.id === levelId) != undefined)
             })
         }
 
         // apply search filter
         const searchTerms = searchString.trim().toLowerCase().split(" ")
-        result = result.filter(drill => {
+        drillList = drillList.filter(drill => {
             if (drill.pinned)
                 return true
 
@@ -144,34 +150,45 @@ export default function DrillListSection() {
             return searchTerms.some(term => textToSearch.toLowerCase().includes(term))
         })
 
-        // sort by newest first
-        result = [...result].sort((a, b) => {
-            return b.dateCreated.getTime() - a.dateCreated.getTime()
-        })
+        
+        if (!randomOrder) {
+            // sort by newest first
+            drillList = [...drillList].sort((a, b) => {
+                return b.dateCreated.getTime() - a.dateCreated.getTime()
+            })
+        } else {
+            // random sort
+            shuffle(drillList)
+        }
+        
 
         // move pinned to front while preserving newest-first ordering within each group
-        result = [...result].sort((a, b) => {
+        drillList = [...drillList].sort((a, b) => {
             return Number(b.pinned) - Number(a.pinned)
         })
 
         // limit drills
         let numPinned = 0
-        while (result[numPinned] && result[numPinned].pinned) {
+        while (drillList[numPinned] && drillList[numPinned].pinned) {
             numPinned++
         }
 
         if (resultLimit > 0) {
-            result = result.slice(0, resultLimit + numPinned)
+            drillList = drillList.slice(0, resultLimit + numPinned)
         }
 
-        return result
+        setDrills(drillList)
     }
 
-    const drills = useMemo(() => {
-        if (!result?.success)
-            return null
+    // const drills = useMemo(() => {
+    //     if (!result?.success)
+    //         return null
 
-        return filterAndSortDrills(result.data)
+    //     return filterAndSortDrills(result.data)
+    // }, [result, eventFilters, levelFilters, searchString, searchType, resultLimit])
+
+    useEffect(() => {
+        filterAndSortDrills()
     }, [result, eventFilters, levelFilters, searchString, searchType, resultLimit])
 
     // const drills = result?.success ? result.data : null
@@ -306,7 +323,8 @@ export default function DrillListSection() {
                 <img 
                     className={style.inlineImageButton}
                     src={imageDice} 
-                    alt="randomize" 
+                    alt="randomize"
+                    onClick={() => filterAndSortDrills(true)}
                 />
             </div>
             

@@ -35,7 +35,7 @@ export default function TagList({ tags, toggleData = [], onTagClicked, notButton
             tags.map(tag => (
                 <button
                     key={tag.id}
-                    className={`${style.tag} clickable`}
+                    className={`${style.tag} ${notButtons ? null : style.clickable}`}
                     onClick={() => onTagClicked?.(tag.id)}
                     style={getButtonStyle(tag)}
                 >{tag.name}</button>
