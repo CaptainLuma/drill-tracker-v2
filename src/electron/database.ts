@@ -26,7 +26,6 @@ const db = drizzle({ client: sqlite })
 
 
 
-
 export async function createBackup(): Promise<string> {
     const backupRoot = path.join(dataPath, 'backups')
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-')
@@ -110,6 +109,34 @@ export async function addDrill(drill: NewDrill): Promise<number> {
         throw new Error("no result from table insert")
 
     return result[0].id
+}
+
+export async function addDrills(drills: NewDrill[]): Promise<number[]> {
+    if (drills.length == 0)
+        throw new Error("cannot add zero drills")
+
+    const dateCreated = new Date().toISOString()
+
+    const result = await db
+        .insert(table.drills)
+        .values(drills.map(drill => ({
+            name: drill.name,
+            description: drill.description,
+            dateCreated: dateCreated,
+            dateModified: dateCreated,
+            pinned: false,
+            events: drill.events,
+            levels: drill.levels,
+            image: drill.image
+        })))
+        .returning({
+            id: table.drills.id
+        })
+
+    if (result.length == 0)
+        throw new Error("no result from table insert")
+
+    return result.map(r => r.id)
 }
 
 export async function editDrill(drill: Drill): Promise<number> {

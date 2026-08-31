@@ -3,7 +3,7 @@ import DrillListItem from "../DrillListItem/DrillListItem"
 import type { Drill } from "../../../shared/models/drill"
 import style from "./DrillListSection.module.css"
 import { useContext, useEffect, useState } from "react"
-import { NavigationContext } from "../../App"
+import { ConfirmModalContext, NavigationContext } from "../../App"
 import AlertsList from "../AlertsList/AlertsList"
 import { LayoutGroup } from "motion/react"
 import { useAlerts } from "../../context/AlertContext"
@@ -43,6 +43,7 @@ export default function DrillListSection() {
     const queryClient = useQueryClient()
     const { addAlert } = useAlerts()
     const navigation = useContext(NavigationContext)
+    const confirmModal = useContext(ConfirmModalContext)
 
     const [ drills, setDrills ] = useState<Drill[]>([])
 
@@ -243,6 +244,12 @@ export default function DrillListSection() {
             return
         }
 
+        if (confirmModal) {
+            const userResponse = await confirmModal.openConfirmModal("Export your pinned drills to a text file?")
+
+            if (!userResponse) return
+        }
+
         const result = await window.api.exportDrills(pinnedDrills)
         if (result.success)
             addAlert({ 
@@ -356,6 +363,12 @@ export default function DrillListSection() {
                         src={imageBackup} 
                         alt="backup"
                         onClick={async () => {
+                            if (confirmModal) {
+                                const userResponse = await confirmModal.openConfirmModal("Backup your files?")
+
+                                if (!userResponse) return
+                            }
+                            
                             const result = await window.api.createBackup()
                             if (result.success)
                                 addAlert({ 

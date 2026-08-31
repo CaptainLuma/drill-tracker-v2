@@ -31,7 +31,13 @@ type ConfirmModalContextType = {
 export const NavigationContext = createContext<NavigationContextType | null>(null)
 export const ConfirmModalContext = createContext<ConfirmModalContextType | null>(null)
 
-const queryClient = new QueryClient()
+const queryClient = new QueryClient({
+	defaultOptions: {
+		queries: {
+			refetchOnWindowFocus: false,
+		},
+	},
+})
 
 export default function App() {
 	return (
