@@ -110,14 +110,21 @@ export default function AddEditTagModal(props: Props) {
         const id = tagSelectRef.current ? Number(tagSelectRef.current.value) : null
         if (!id) return
 
-        const success = await window.api.deleteEvent(id)
+        let response: IpcResult<number>
+        if (props.tagType == "event") {
+            response = await window.api.deleteEvent(id)
+        } else {
+            response = await window.api.deleteLevel(id)
+        }
 
-        if (success) {
+        if (response.success) {
             queryClient.invalidateQueries({
-                queryKey: ["events"],
+                queryKey: props.tagType == "event" ? ["events"] : ["levels"],
             });
 
             props.onClose()
+        } else {
+            setAlertMessage(response.error)
         }
     }
 

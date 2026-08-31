@@ -222,6 +222,11 @@ export async function editEvent(event: Event): Promise<number> {
 }
 
 export async function deleteEvent(id: number): Promise<number> {
+    const drillsUsingTag = getDrills().filter(d => d.events.find(e => e.id == id))
+
+    if (drillsUsingTag.length > 0)
+        throw new Error(`Cannot delete this event because (${drillsUsingTag.length}) drills are using it.`)
+
     const result = await db
         .delete(table.events)
         .where(eq(table.events.id, id))
@@ -310,6 +315,11 @@ export async function editLevel(level: Level): Promise<number> {
 }
 
 export async function deleteLevel(id: number): Promise<number> {
+    const drillsUsingTag = getDrills().filter(d => d.levels.find(l => l.id == id))
+
+    if (drillsUsingTag.length > 0)
+        throw new Error(`Cannot delete this level because (${drillsUsingTag.length}) drills are using it.`)
+
     const result = await db
         .delete(table.levels)
         .where(eq(table.levels.id, id))

@@ -76,7 +76,7 @@ export default function DrillListItem({ drill, onPin }: Props) {
                 >
                     <div className={style.body}>
                         <p>{drill.description}</p>
-
+                        
                         { drill.levels && drill.levels.length > 0 && <>
                             <h4>Levels:</h4>
                             <TagList
