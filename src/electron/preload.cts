@@ -30,4 +30,8 @@ contextBridge.exposeInMainWorld('api', {
     editLevel: (level: Level) => ipcRenderer.invoke("editLevel", level),
     deleteLevel: (id: number) => ipcRenderer.invoke("deleteLevel", id),
 
+    promptUserImage: () => ipcRenderer.invoke("promptUserImage"),
+    getDrillImage: (imageName: string) => ipcRenderer.invoke("getDrillImage", imageName),
+    deleteUnusedImages: () => ipcRenderer.invoke("deleteUnusedImages")
+
 } satisfies Window['api']);

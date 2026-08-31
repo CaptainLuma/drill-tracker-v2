@@ -1,5 +1,5 @@
 import fs from 'node:fs/promises'
-import { app, BrowserWindow } from 'electron'
+import { app, BrowserWindow, dialog, protocol, net } from 'electron'
 import path from 'path'
 import { isDev, ipcMainHandle, getErrorMessage } from './util.js'
 import { spawn } from 'node:child_process'
@@ -15,6 +15,41 @@ let mainWindow: BrowserWindow
 
 const dataPath = path.join(app.getPath('userData'), 'data')
 console.log(`Datapath: ${dataPath}`)
+
+const validImageExtensions = new Set([
+    '.png',
+    '.jpg',
+    '.jpeg',
+    '.webp',
+    '.bmp',
+    '.gif',
+    '.svg',
+    '.avif'
+])
+
+const imageMimeTypes = {
+    '.png': 'image/png',
+    '.jpg': 'image/jpeg',
+    '.jpeg': 'image/jpeg',
+    '.gif': 'image/gif',
+    '.webp': 'image/webp',
+    '.svg': 'image/svg+xml',
+    '.avif': 'image/avif',
+    '.bmp': 'image/bmp',
+} as const
+
+protocol.registerSchemesAsPrivileged([
+    {
+        scheme: 'drill-image',
+        privileges: {
+            standard: true,
+            secure: true,
+            supportFetchAPI: true,
+            corsEnabled: true,
+            stream: true,
+        },
+    },
+]);
 
 function getPreloadPath() {
     return path.join(
@@ -64,9 +99,35 @@ app.whenReady().then(() => {
         if (!isMac)
             app.quit()
     })
+
+    protocol.handle('drill-image', async (request) => {
+        const url = new URL(request.url);
+
+        // const filename = url.pathname.slice(1);
+        const filename = url.hostname
+        
+        const imagePath = path.join(
+            dataPath,
+            'drill-images',
+            filename
+        );
+
+        // console.log("imagePath:", imagePath)
+
+        return net.fetch(`file://${imagePath}`);
+    });
 })
 
+async function getFileExists(pathElements: string[]) {
+    const fullPath = path.join(dataPath, ...pathElements)
 
+    try {
+        await fs.access(fullPath);
+        return true;
+    } catch {
+        return false;
+    }
+}
 
 async function exportDrillsAsMarkdown(drills: Drill[]) {
     const exportsDir = path.join(dataPath, "exports");
@@ -111,10 +172,135 @@ async function exportDrillsAsMarkdown(drills: Drill[]) {
     return filePath;
 }
 
-ipcMainHandle("exportDrills", async (_, drills: Drill[]) => {
-    const result = await exportDrillsAsMarkdown(drills)
+async function getAndCopyUserSelectedImage() {
+    const { canceled, filePaths } = await dialog.showOpenDialog({
+        title: "Select Drill Image",
+        properties: ["openFile"],
+        filters: [
+            {
+                name: "Images",
+                extensions: [
+                    "png",
+                    "jpg",
+                    "jpeg",
+                    "webp",
+                    "bmp",
+                    "gif",
+                    "svg",
+                    "avif"
+                ]
+            }
+        ]
+    });
 
+    if (canceled || filePaths.length === 0) {
+        return null;
+    }
+
+    const sourcePath = filePaths[0];
+    const extension = path.extname(sourcePath).toLowerCase();
+
+    if (!validImageExtensions.has(extension)) {
+        throw new Error(`Unsupported image type: ${extension || 'none'}. Supported types: .png, .jpg, .jpeg, .webp, .bmp, .gif, .svg, .avif`)
+    }
+
+    const destinationDirectory = path.join(
+        dataPath,
+        "drill-images"
+    );
+
+    await fs.mkdir(destinationDirectory, { recursive: true });
+
+    const parsed = path.parse(sourcePath);
+
+    let fileName = parsed.base;
+    let destinationPath = path.join(destinationDirectory, fileName);
+
+    // ensure name is unqiue
+    let counter = 1
+    while (await getFileExists(["drill-images", fileName])) {
+        fileName = `${parsed.name} (${counter})${parsed.ext}`;
+        destinationPath = path.join(destinationDirectory, fileName);
+        counter++;
+    }
+
+    await fs.copyFile(sourcePath, destinationPath);
+
+    return fileName;
+}
+
+async function getImage(fileName: string) {
+    const imagePath = path.join(
+        dataPath,
+        'drill-images',
+        fileName
+    );
+
+    const data = await fs.readFile(imagePath);
+
+    const extension = path.extname(fileName).toLowerCase();
+
+    const mimeType = imageMimeTypes[extension as keyof typeof imageMimeTypes];
+
+    if (!mimeType) {
+        throw new Error(`Unsupported image extension for MIME lookup: ${extension}`)
+    }
+
+    return {
+        data: data.toString('base64'),
+        mimeType
+    };
+}
+
+async function getFileNames(directory: string) {
+    const entries = await fs.readdir(directory, { withFileTypes: true });
+
+    return entries
+        .filter(entry => entry.isFile())
+        .map(entry => entry.name);
+}
+
+async function deleteUnusedImages() {
+    const directory = path.join(dataPath, "drill-images");
+
+    const usedImages = new Set(database.getDrills().map(d => d.image).filter(i => i != null))
+    const allImages = await getFileNames(directory)
+    const unusedImages = allImages.filter(img => !usedImages.has(img))
+
+    let deletedFileNames = []
+    for (const fileName of unusedImages) {
+        const filePath = path.join(directory, fileName);
+
+        try {
+            const stats = await fs.stat(filePath);
+
+            // Only delete regular files, never directories.
+            if (stats.isFile()) {
+                await fs.unlink(filePath);
+                deletedFileNames.push(fileName)
+            }
+        } catch {
+            console.log(`failed to delete image: ${fileName}`)    
+        }
+    }
+
+    return deletedFileNames
+}
+
+
+
+ipcMainHandle("getDrillImage", async (_, fileName: string) => {
     try {
+        return { success: true, data: await getImage(fileName) }
+    } catch (err) {
+        return { success: false, error: getErrorMessage(err) }
+    }
+})
+
+ipcMainHandle("exportDrills", async (_, drills: Drill[]) => {
+    try {
+        const result = await exportDrillsAsMarkdown(drills)
+
         return {success: true, data: result}
     } catch (err) {
         return {success: false, error: getErrorMessage(err)}
@@ -249,3 +435,22 @@ ipcMainHandle("deleteLevel", async (_, id: number) => {
     }
 })
 
+ipcMainHandle("promptUserImage", async () => {
+    try {
+        const fileName = await getAndCopyUserSelectedImage()
+
+        return { success: true, data: fileName }
+    } catch (err) {
+        return { success: false, error: getErrorMessage(err)}
+    }
+})
+
+ipcMainHandle("deleteUnusedImages", async () => {
+    try {
+        const result = await deleteUnusedImages()
+
+        return { success: true, data: result }
+    } catch (err) {
+        return { success: false, error: getErrorMessage(err)}
+    }
+})

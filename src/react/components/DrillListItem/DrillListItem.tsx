@@ -75,16 +75,24 @@ export default function DrillListItem({ drill, onPin }: Props) {
                     transition={{ duration: animationMovementSpeed, ease: "easeInOut" }}
                 >
                     <div className={style.body}>
-                        <p>{drill.description}</p>
+                        <div>
+                            <p>{drill.description}</p>
                         
-                        { drill.levels && drill.levels.length > 0 && <>
-                            <h4>Levels:</h4>
-                            <TagList
-                                tags={drill.levels}
-                                notButtons={true}
-                            />
-                        </>}
-                        
+                            { drill.levels && drill.levels.length > 0 && <>
+                                <h4>Levels:</h4>
+                                <TagList
+                                    tags={drill.levels}
+                                    notButtons={true}
+                                />
+                            </>}
+                        </div>
+                        <div>
+                            { drill.image &&
+                                <img
+                                    src={`drill-image://${drill.image}`}
+                                />
+                            }
+                        </div>
                     </div>
                 </motion.div>
             )}

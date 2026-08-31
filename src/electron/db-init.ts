@@ -37,7 +37,8 @@ function initializeDrillTable(sqlite: SqliteDatabase) {
             date_modified text DEFAULT CURRENT_TIMESTAMP NOT NULL,
             pinned integer DEFAULT false NOT NULL,
             events text DEFAULT '[]' NOT NULL,
-            levels text DEFAULT '[]' NOT NULL
+            levels text DEFAULT '[]' NOT NULL,
+            image text
         );
     `)
 
@@ -60,6 +61,13 @@ function initializeDrillTable(sqlite: SqliteDatabase) {
         "drills",
         "levels",
         "text DEFAULT '[]' NOT NULL"
+    )
+
+    addMissingColumn(
+        sqlite,
+        "drills",
+        "image",
+        "text"
     )
 }
 

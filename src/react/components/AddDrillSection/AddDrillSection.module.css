@@ -1,6 +1,6 @@
 .addDrillSection {
     width: calc(100% - 60px);
-    max-width: 900px;
+    max-width: 800px;
     margin: auto;
     /* margin-bottom: 500px; */
 }
@@ -22,4 +22,58 @@
     border: none;
     padding: 0px 3px;
     color: var(--shallow-text-color);
+}
+
+.tagsAndImageSection {
+    display: grid;
+    grid-template-columns: 1fr auto;
+}
+
+/* .tagsSection {
+    
+} */
+
+.imageContainer {
+    display: block;
+    width: 200px;
+    flex: 0 0 200px;
+    height: fit-content;
+    background-color: var(--secondary-background-color);
+    position: relative;
+    /* border: 2px solid lime; */
+}
+
+.imageContainer img {
+    width: 100%;
+    height: auto;
+    display: block;
+}
+
+.imageButtons {
+    margin-top: 10px;
+    position: absolute;
+    bottom: 0px;
+    box-sizing: border-box;
+    width: 100%;
+    padding: 10px;
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.imageButtons button {
+    background-color: rgb(230, 230, 230);
+    color: black;
+    padding: 5px 10px;
+    font-size: 0.875rem;
+    font-weight: 700;
+    border-radius: 15px;
+}
+
+.imageContainer:hover .imageButtons {
+    opacity: 1;
+    transition: opacity 0.3s ease;
+    /* pointer-events: auto; */
 }

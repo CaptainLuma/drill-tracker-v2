@@ -56,7 +56,8 @@ export function getDrills(): Drill[] {
             dateModified: new Date(drill.dateModified),
             pinned: drill.pinned,
             events: drill.events.map(x => eventsMap.get(x)).filter(x => x != undefined),
-            levels: drill.levels.map(x => levelsMap.get(x)).filter(x => x != undefined)
+            levels: drill.levels.map(x => levelsMap.get(x)).filter(x => x != undefined),
+            image: drill.image
         })))
 }
 
@@ -81,7 +82,8 @@ export function getDrill(id: number): Drill {
         dateModified: new Date(drill.dateModified),
         pinned: drill.pinned,
         events: drill.events.map(x => eventsMap.get(x)).filter(x => x != undefined),
-        levels: drill.levels.map(x => levelsMap.get(x)).filter(x => x != undefined)
+        levels: drill.levels.map(x => levelsMap.get(x)).filter(x => x != undefined),
+        image: drill.image
     }
 }
 
@@ -97,7 +99,8 @@ export async function addDrill(drill: NewDrill): Promise<number> {
             dateModified: dateCreated,
             pinned: false,
             events: drill.events,
-            levels: drill.levels
+            levels: drill.levels,
+            image: drill.image
         })
         .returning({
             id: table.drills.id
@@ -120,7 +123,8 @@ export async function editDrill(drill: Drill): Promise<number> {
             dateModified: dateModified,
             pinned: drill.pinned,
             events: drill.events.filter(x => x != null).map(x => x.id),
-            levels: drill.levels.filter(x => x != null).map(x => x.id)
+            levels: drill.levels.filter(x => x != null).map(x => x.id),
+            image: drill.image
         })
         .where(eq(table.drills.id, drill.id))
         .returning({

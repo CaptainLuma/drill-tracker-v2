@@ -10,6 +10,7 @@ export interface Drill {
     pinned: boolean
     events: Event[]
     levels: Level[]
+    image: string | null
 }
 
 export interface NewDrill {
@@ -17,4 +18,5 @@ export interface NewDrill {
     description: string
     events: number[]
     levels: number[]
+    image: string | null
 }

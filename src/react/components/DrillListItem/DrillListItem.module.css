@@ -39,6 +39,9 @@
 .body {
     border-bottom: var(--border-soft);
     padding: 20px;
+
+    display: grid;
+    grid-template-columns: 1fr auto;
 }
 
 .body p {
@@ -48,4 +51,9 @@
 
 .bodyWrapper {
     overflow: hidden;
+}
+
+.body img {
+    width: 200px;
+    height: auto;
 }

@@ -8,6 +8,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query"
 import AddEditTagModal from "../AddEditTagModal/AddEditTagModal"
 import TagListState from "../TagListState/TagListState"
 import type { TagListRef } from "../TagListState/TagListState"
+import imageEmpty from "../../../assets/images/picture-filled.svg"
 
 type TagModalState = {
 	mode: "add" | "edit"
@@ -33,6 +34,11 @@ export default function AddDrillSection() {
 
     const eventButtonsRef = useRef<TagListRef>(null)
     const levelButtonsRef = useRef<TagListRef>(null)
+
+    const imagePreviewRef = useRef<HTMLImageElement>(null)
+
+    const [ userSelectedImage, setUserSelectedImage ] = useState<string | null>(null)
+    // let userSelectedImage: string | null = null
 
     // get drill data (if in edit mode)
     const { data: drillResponse } = useQuery({
@@ -67,6 +73,7 @@ export default function AddDrillSection() {
             const drillToEdit = drillResponse.data
             nameInputRef.current!.value = drillToEdit.name
             descriptionInputRef.current!.value = drillToEdit.description
+            setUserSelectedImage(drillToEdit.image)
         }
     }, [drillId, drillResponse])
 
@@ -81,7 +88,8 @@ export default function AddDrillSection() {
             name: name,
             description: description,
             events: eventButtonsRef.current?.getToggledTags() ?? [],
-            levels: levelButtonsRef.current?.getToggledTags() ?? []
+            levels: levelButtonsRef.current?.getToggledTags() ?? [],
+            image: userSelectedImage
         }
 
         const response = await window.api.addDrill(drill)
@@ -113,7 +121,8 @@ export default function AddDrillSection() {
             dateModified: new Date(),
             pinned: false,
             events:  events.filter(x => eventIds.includes(x.id)),
-            levels:  levels.filter(x => levelIds.includes(x.id))
+            levels:  levels.filter(x => levelIds.includes(x.id)),
+            image: userSelectedImage
         }
 
         // ensure unique name:
@@ -189,9 +198,48 @@ export default function AddDrillSection() {
         if (!succeeded)
             return
 
+        window.api.deleteUnusedImages().then(result => {
+            if (!result.success)
+                console.log("Failed to delete unused images. Error:", result.error)
+        })
+
         navigation?.navigateToPage({
             page: "drill list page"
         }, false)
+    }
+
+    async function onSetImageButtonClicked() {
+        const result = await window.api.promptUserImage()
+        if (!result.success) {
+            addAlert({ message: `Failed to load image. ${result.error}`, type: "danger" })
+            return
+        }
+
+        if (!result.data) return
+
+        setUserSelectedImage(result.data)
+
+        // set image preview
+        // const imageDataResult = await window.api.getDrillImage(userSelectedImage)
+
+        // if (!imageDataResult.success) {
+        //     addAlert({ message: `Failed to load image. ${imageDataResult.error}`, type: "danger" })
+        //     return
+        // }
+
+        // const image = imageDataResult.data
+        // if (imagePreviewRef.current)
+        //     imagePreviewRef.current.src = `data:${image.mimeType};base64,${image.data}`
+
+        // if (imagePreviewRef.current)
+        //     imagePreviewRef.current.src = `drill-image://${userSelectedImage}`
+    }
+
+    async function onRemoveImageButtonClicked() {
+        setUserSelectedImage(null)
+
+        // if (imagePreviewRef.current)
+        //     imagePreviewRef.current.src = imageEmpty
     }
 
     return (<section className={style.addDrillSection}>
@@ -204,50 +252,68 @@ export default function AddDrillSection() {
             <input ref={nameInputRef} type="text" />
         </div>
 
-        {/* events */}
-        <div className="mv-2">
-            <div className="flex">
-                <label className="mv-1">Events:</label>
-                <button 
-                    className={style.tagControlButton}
-                    onClick={() => setTagModalState({ mode: "add", tagType: "event" })}
-                >Add</button>
-                <button
-                    className={style.tagControlButton}
-                    onClick={() => setTagModalState({ mode: "edit", tagType: "event" })}
-                >Edit</button>
+        <div className={style.tagsAndImageSection}>
+            <div className={style.tagsSection}>
+                {/* events */}
+                <div className="mb-2">
+                    <div className="flex">
+                        <label className="mv-1">Events:</label>
+                        <button 
+                            className={style.tagControlButton}
+                            onClick={() => setTagModalState({ mode: "add", tagType: "event" })}
+                        >Add</button>
+                        <button
+                            className={style.tagControlButton}
+                            onClick={() => setTagModalState({ mode: "edit", tagType: "event" })}
+                        >Edit</button>
+                    </div>
+
+                    { events &&
+                        <TagListState
+                            tags={events}
+                            toggledTags={ addEditMode == "add" ? [] : (drillResponse?.success ? drillResponse.data.events : []) }
+                            ref={eventButtonsRef}
+                        />
+                    }
+                </div>
+
+                {/* levels */}
+                <div className="mv-2">
+                    <div className="flex">
+                        <label className="mv-1">Levels:</label>
+                        <button 
+                            className={style.tagControlButton}
+                            onClick={() => setTagModalState({ mode: "add", tagType: "level" })}
+                        >Add</button>
+                        <button
+                            className={style.tagControlButton}
+                            onClick={() => setTagModalState({ mode: "edit", tagType: "level" })}
+                        >Edit</button>
+                    </div>
+
+                    { levels &&
+                        <TagListState
+                            tags={levels}
+                            toggledTags={ addEditMode == "add" ? [] : (drillResponse?.success ? drillResponse.data.levels : []) }
+                            ref={levelButtonsRef}
+                        />
+                    }
+                </div>
             </div>
 
-            { events &&
-                <TagListState
-                    tags={events}
-                    toggledTags={ addEditMode == "add" ? [] : (drillResponse?.success ? drillResponse.data.events : []) }
-                    ref={eventButtonsRef}
+            <div className={style.imageContainer}>
+                <img 
+                    className={style.formImage}
+                    src={userSelectedImage ? `drill-image://${userSelectedImage}` : imageEmpty}
+                    alt="image thumbnail" 
+                    ref={imagePreviewRef}
                 />
-            }
-        </div>
 
-        {/* levels */}
-        <div className="mv-2">
-            <div className="flex">
-                <label className="mv-1">Levels:</label>
-                <button 
-                    className={style.tagControlButton}
-                    onClick={() => setTagModalState({ mode: "add", tagType: "level" })}
-                >Add</button>
-                <button
-                    className={style.tagControlButton}
-                    onClick={() => setTagModalState({ mode: "edit", tagType: "level" })}
-                >Edit</button>
+                <div className={style.imageButtons}>
+                    <button onClick={onSetImageButtonClicked}>Set Image</button>
+                    <button onClick={onRemoveImageButtonClicked}>Remove</button>
+                </div>
             </div>
-
-            { levels &&
-                <TagListState
-                    tags={levels}
-                    toggledTags={ addEditMode == "add" ? [] : (drillResponse?.success ? drillResponse.data.levels : []) }
-                    ref={levelButtonsRef}
-                />
-            }
         </div>
 
         <div className="mv-2">
