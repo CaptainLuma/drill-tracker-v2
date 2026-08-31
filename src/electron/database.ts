@@ -87,6 +87,11 @@ export function getDrill(id: number): Drill {
 }
 
 export async function addDrill(drill: NewDrill): Promise<number> {
+    const drills = getDrills()
+    if (drills.find(d => d.name == drill.name)) {
+        throw new Error("Cannot add this drill because there is already a drill with the same name.")
+    }
+
     const dateCreated = new Date().toISOString()
 
     const result = await db
@@ -210,6 +215,11 @@ export function getEvent(id: number): Event {
 }
 
 export async function addEvent(event: NewEvent): Promise<number> {
+    const events = getEvents()
+    if (events.find(e => e.name == event.name)) {
+        throw new Error("Cannot add this event because there is already an event with the same name.")
+    }
+
     const dateCreated = new Date().toISOString()
 
     const result = await db
@@ -303,6 +313,11 @@ export function getLevel(id: number): Level {
 }
 
 export async function addLevel(level: NewLevel): Promise<number> {
+    const levels = getLevels()
+    if (levels.find(l => l.name == level.name)) {
+        throw new Error("Cannot add this level because there is already a level with the same name.")
+    }
+
     const dateCreated = new Date().toISOString()
 
     const result = await db
