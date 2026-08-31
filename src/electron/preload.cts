@@ -9,6 +9,9 @@ contextBridge.exposeInMainWorld('api', {
     // on: (channel, func) => ipcRenderer.on(channel, (event, ...args) => func(...args)),
     // invoke: (channel, data) => ipcRenderer.invoke(channel, data),
 
+    createBackup: () => ipcRenderer.invoke("createBackup"),
+    exportDrills: (drills: Drill[]) => ipcRenderer.invoke("exportDrills", drills),
+
     getDrills: () => ipcRenderer.invoke("getDrills"),
     getDrill: (id: number) => ipcRenderer.invoke("getDrill", id),
     addDrill: (drill: NewDrill) => ipcRenderer.invoke("addDrill", drill),

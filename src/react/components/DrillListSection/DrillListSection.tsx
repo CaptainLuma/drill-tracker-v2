@@ -2,13 +2,15 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import DrillListItem from "../DrillListItem/DrillListItem"
 import type { Drill } from "../../../shared/models/drill"
 import style from "./DrillListSection.module.css"
-import { useContext, useEffect, useMemo, useState } from "react"
+import { useContext, useEffect, useState } from "react"
 import { NavigationContext } from "../../App"
 import AlertsList from "../AlertsList/AlertsList"
 import { LayoutGroup } from "motion/react"
 import { useAlerts } from "../../context/AlertContext"
 import TagList from "../TagList/TagList"
 import imageDice from "../../../assets/images/dice (3).svg"
+import imageBackup from "../../../assets/images/download-square-svgrepo-com.svg"
+import imageDocument from "../../../assets/images/document (1).svg"
 import { shuffle } from "../../../shared/helpers"
 
 type TagFilter = {
@@ -180,18 +182,9 @@ export default function DrillListSection() {
         setDrills(drillList)
     }
 
-    // const drills = useMemo(() => {
-    //     if (!result?.success)
-    //         return null
-
-    //     return filterAndSortDrills(result.data)
-    // }, [result, eventFilters, levelFilters, searchString, searchType, resultLimit])
-
     useEffect(() => {
         filterAndSortDrills()
     }, [result, eventFilters, levelFilters, searchString, searchType, resultLimit])
-
-    // const drills = result?.success ? result.data : null
 
     const { mutateAsync: editDrillMutation } = useMutation({
         mutationFn: (drill: Drill) => window.api.editDrill(drill),
@@ -239,6 +232,29 @@ export default function DrillListSection() {
             setEventFilters(tagData)
         else
             setLevelFilters(tagData)
+    }
+
+    async function exportPinnedDrills() {
+        if (!drills) return
+                            
+        const pinnedDrills = drills.filter(d => d.pinned)
+        if (pinnedDrills.length == 0) {
+            addAlert({ message: "no drills are pinned." })
+            return
+        }
+
+        const result = await window.api.exportDrills(pinnedDrills)
+        if (result.success)
+            addAlert({ 
+                message: `Exported ${pinnedDrills.length} drill${pinnedDrills.length == 1 ? "" : "s"}. Path: "${result.data}"`,
+                type: "info"
+            })
+        else {
+            addAlert({
+                message: `failed to export. Error: ${result.error}`,
+                type: "danger"
+            })
+        }
     }
 
     function RenderDrillList(drills: Drill[]) {
@@ -306,26 +322,66 @@ export default function DrillListSection() {
                         setSearchString(event.target.value)
                     }}
                 />
-                <label>Top:</label>
-                <input 
-                    className={style.resultLimitInput}
-                    type="number" 
-                    min="0" 
-                    step="1"
-                    value={resultLimit === 0 ? "" : resultLimit}
-                    onChange={(event) => {
-                        const limit = event.target.value != "" ?
-                            parseInt(event.target.value) : 0
-                        
-                        setResultLimit(limit)
-                    }}
-                />
-                <img 
-                    className={style.inlineImageButton}
-                    src={imageDice} 
-                    alt="randomize"
-                    onClick={() => filterAndSortDrills(true)}
-                />
+                <div className="flex vCenter">
+                    <label>Top:</label>
+                    <input 
+                        className={style.resultLimitInput}
+                        type="number" 
+                        min="0" 
+                        step="1"
+                        value={resultLimit === 0 ? "" : resultLimit}
+                        onChange={(event) => {
+                            const limit = event.target.value != "" ?
+                                parseInt(event.target.value) : 0
+                            
+                            setResultLimit(limit)
+                        }}
+                    />
+                </div>
+                
+                <div className={style.inlineImageButtonContainer}>
+                    <label className={style.inlineImageButtonLabel}>Randomize list order</label>
+                    <img 
+                        className={style.inlineImageButton}
+                        src={imageDice} 
+                        alt="randomize"
+                        onClick={() => filterAndSortDrills(true)}
+                    />
+                </div>
+                
+                <div className={style.inlineImageButtonContainer}>
+                    <label className={style.inlineImageButtonLabel}>Backup files</label>
+                    <img 
+                        className={style.inlineImageButton}
+                        src={imageBackup} 
+                        alt="backup"
+                        onClick={async () => {
+                            const result = await window.api.createBackup()
+                            if (result.success)
+                                addAlert({ 
+                                    message: `backup has been created. Path: "${result.data}"`,
+                                    type: "info"
+                                })
+                            else {
+                                addAlert({
+                                    message: `failed to create backup. Error: ${result.error}`,
+                                    type: "danger"
+                                })
+                            }
+                        }}
+                    />
+                </div>
+
+                <div className={style.inlineImageButtonContainer}>
+                    <label className={style.inlineImageButtonLabel}>Export Pinned</label>
+                    <img 
+                        className={style.inlineImageButton}
+                        src={imageDocument} 
+                        alt="export pinned"
+                        onClick={exportPinnedDrills}
+                    />
+                </div>
+                
             </div>
             
             <button

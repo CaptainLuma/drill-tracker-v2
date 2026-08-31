@@ -43,17 +43,9 @@ export default function DrillListItem({ drill, onPin }: Props) {
                 onClick={() => setExpanded(!expanded)}
             />
             <h3>{drill.name}</h3>
-            {/* <div className="tagContainer">
-                { drill.events.filter(x => x != null).map(event => (
-                    <button
-                        key={event.id}
-                        className="tag activeTag"
-                        style={{ backgroundColor: event.color }}
-                    >{event.name}</button>
-                )) }
-            </div> */}
+
             <TagList
-                tags={drill.events.filter(x => x != null)}
+                tags={drill.events}
                 notButtons={true}
             />
             
@@ -87,17 +79,8 @@ export default function DrillListItem({ drill, onPin }: Props) {
 
                         { drill.levels && drill.levels.length > 0 && <>
                             <h4>Levels:</h4>
-                            {/* <div className="tagContainer">
-                                { drill.levels.filter(x => x != null).map(level => (
-                                    <button
-                                        key={level.id}
-                                        className="tag activeTag"
-                                        style={{ backgroundColor: level.color }}
-                                    >{level.name}</button>
-                                )) }
-                            </div> */}
                             <TagList
-                                tags={drill.levels.filter(x => x != null)}
+                                tags={drill.levels}
                                 notButtons={true}
                             />
                         </>}

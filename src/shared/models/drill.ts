@@ -8,8 +8,8 @@ export interface Drill {
     dateCreated: Date
     dateModified: Date
     pinned: boolean
-    events: (Event | null)[]
-    levels: (Level | null)[]
+    events: Event[]
+    levels: Level[]
 }
 
 export interface NewDrill {

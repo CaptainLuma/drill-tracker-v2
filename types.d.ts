@@ -6,6 +6,9 @@ import type { Level, NewLevel } from './src/shared/models/level.ts'
 declare global {
     interface Window {
         api: {
+            createBackup: () => Promise<IpcResult<string>>,
+            exportDrills: (drills: Drill[]) => Promise<IpcResult<string>>
+
             getDrills: () => Promise<IpcResult<Drill[]>>,
             getDrill: (id: number) => Promise<IpcResult<Drill>>,
             addDrill: (drill: NewDrill) => Promise<IpcResult<number>>,
@@ -27,7 +30,9 @@ declare global {
     }
 
     type EventPayloadMapping = {
-        test: string,
+        createBackup: Promise<IpcResult<string>>,
+        exportDrills: Promise<IpcResult<string>>
+
         getDrills: IpcResult<Drill[]>,
         getDrill: IpcResult<Drill>,
         addDrill: Promise<IpcResult<number>>,

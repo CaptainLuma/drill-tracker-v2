@@ -24,6 +24,22 @@ initializeDatabase(sqlite)
 
 const db = drizzle({ client: sqlite })
 
+
+
+
+export async function createBackup(): Promise<string> {
+    const backupRoot = path.join(dataPath, 'backups')
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-')
+    const backupDir = path.join(backupRoot, timestamp)
+    const backupPath = path.join(backupDir, 'drill-tracker.db')
+
+    fs.mkdirSync(backupDir, { recursive: true })
+
+    await sqlite.backup(backupPath)
+
+    return backupPath
+}
+
 export function getDrills(): Drill[] {
     const eventsMap = new Map(getEvents().map(obj => [obj.id, obj]));
     const levelsMap = new Map(getLevels().map(obj => [obj.id, obj]));
@@ -39,8 +55,8 @@ export function getDrills(): Drill[] {
             dateCreated: new Date(drill.dateCreated),
             dateModified: new Date(drill.dateModified),
             pinned: drill.pinned,
-            events: drill.events.map(x => eventsMap.get(x) ?? null),
-            levels: drill.levels.map(x => levelsMap.get(x) ?? null)
+            events: drill.events.map(x => eventsMap.get(x)).filter(x => x != undefined),
+            levels: drill.levels.map(x => levelsMap.get(x)).filter(x => x != undefined)
         })))
 }
 
@@ -64,8 +80,8 @@ export function getDrill(id: number): Drill {
         dateCreated: new Date(drill.dateCreated),
         dateModified: new Date(drill.dateModified),
         pinned: drill.pinned,
-        events: drill.events.map(x => eventsMap.get(x) ?? null),
-        levels: drill.levels.map(x => levelsMap.get(x) ?? null)
+        events: drill.events.map(x => eventsMap.get(x)).filter(x => x != undefined),
+        levels: drill.levels.map(x => levelsMap.get(x)).filter(x => x != undefined)
     }
 }
 

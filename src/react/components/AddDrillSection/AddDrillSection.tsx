@@ -221,7 +221,7 @@ export default function AddDrillSection() {
             { events &&
                 <TagListState
                     tags={events}
-                    toggledTags={ addEditMode == "add" ? [] : (drillResponse?.success ? drillResponse.data.events.filter(t => t != null) : []) }
+                    toggledTags={ addEditMode == "add" ? [] : (drillResponse?.success ? drillResponse.data.events : []) }
                     ref={eventButtonsRef}
                 />
             }
@@ -244,7 +244,7 @@ export default function AddDrillSection() {
             { levels &&
                 <TagListState
                     tags={levels}
-                    toggledTags={ addEditMode == "add" ? [] : (drillResponse?.success ? drillResponse.data.levels.filter(t => t != null) : []) }
+                    toggledTags={ addEditMode == "add" ? [] : (drillResponse?.success ? drillResponse.data.levels : []) }
                     ref={levelButtonsRef}
                 />
             }

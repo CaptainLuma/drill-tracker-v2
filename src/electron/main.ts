@@ -1,7 +1,8 @@
-// const fs = require('node:fs/promises');
+import fs from 'node:fs/promises'
 import { app, BrowserWindow } from 'electron'
 import path from 'path'
 import { isDev, ipcMainHandle, getErrorMessage } from './util.js'
+import { spawn } from 'node:child_process'
 import * as database from './database.js'
 import { Drill, NewDrill } from '../shared/models/drill.js'
 import { Event, NewEvent } from '../shared/models/event.js'
@@ -66,6 +67,67 @@ app.whenReady().then(() => {
 })
 
 
+
+async function exportDrillsAsMarkdown(drills: Drill[]) {
+    const exportsDir = path.join(dataPath, "exports");
+
+    // Create exports directory if it doesn't exist
+    await fs.mkdir(exportsDir, { recursive: true });
+
+    // Generate filename from current date/time
+    const now = new Date();
+    const timestamp = now
+        .toISOString()
+        .replace(/T/, "_")
+        .replace(/:/g, "-")
+        .replace(/\..+/, "");
+
+    const filePath = path.join(exportsDir, `${timestamp}.md`);
+
+    // Generate Markdown
+    const markdown = drills
+        .map((drill) => {
+            const name = `- ${drill.name}:`
+            const description = drill.description?.trim()
+            ? `\n  - ${drill.description.trim()}`
+            : ''
+
+            return `${name}${description}`
+        })
+        .join('\n\n')
+
+    // Write file
+    await fs.writeFile(filePath, markdown, "utf8");
+
+    // Open the directory in the OS file explorer
+    // await shell.openPath(exportsDir);
+
+    // open the file
+    spawn("notepad.exe", [filePath], {
+        detached: true,
+        stdio: "ignore"
+    }).unref();
+
+    return filePath;
+}
+
+ipcMainHandle("exportDrills", async (_, drills: Drill[]) => {
+    const result = await exportDrillsAsMarkdown(drills)
+
+    try {
+        return {success: true, data: result}
+    } catch (err) {
+        return {success: false, error: getErrorMessage(err)}
+    }
+})
+
+ipcMainHandle("createBackup", async () => {
+    try {
+        return {success: true, data: await database.createBackup()}
+    } catch (err) {
+        return {success: false, error: getErrorMessage(err)}
+    }
+})
 
 ipcMainHandle("getDrills", () => {
     try {
