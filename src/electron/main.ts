@@ -16,28 +16,6 @@ let mainWindow: BrowserWindow
 const dataPath = path.join(app.getPath('userData'), 'data')
 console.log(`Datapath: ${dataPath}`)
 
-const validImageExtensions = new Set([
-    '.png',
-    '.jpg',
-    '.jpeg',
-    '.webp',
-    '.bmp',
-    '.gif',
-    '.svg',
-    '.avif'
-])
-
-const imageMimeTypes = {
-    '.png': 'image/png',
-    '.jpg': 'image/jpeg',
-    '.jpeg': 'image/jpeg',
-    '.gif': 'image/gif',
-    '.webp': 'image/webp',
-    '.svg': 'image/svg+xml',
-    '.avif': 'image/avif',
-    '.bmp': 'image/bmp',
-} as const
-
 protocol.registerSchemesAsPrivileged([
     {
         scheme: 'drill-image',
@@ -173,6 +151,17 @@ async function exportDrillsAsMarkdown(drills: Drill[]) {
 }
 
 async function getAndCopyUserSelectedImage() {
+    const validImageExtensions = new Set([
+        '.png',
+        '.jpg',
+        '.jpeg',
+        '.webp',
+        '.bmp',
+        '.gif',
+        '.svg',
+        '.avif'
+    ])
+
     const { canceled, filePaths } = await dialog.showOpenDialog({
         title: "Select Drill Image",
         properties: ["openFile"],
@@ -229,29 +218,6 @@ async function getAndCopyUserSelectedImage() {
     return fileName;
 }
 
-async function getImage(fileName: string) {
-    const imagePath = path.join(
-        dataPath,
-        'drill-images',
-        fileName
-    );
-
-    const data = await fs.readFile(imagePath);
-
-    const extension = path.extname(fileName).toLowerCase();
-
-    const mimeType = imageMimeTypes[extension as keyof typeof imageMimeTypes];
-
-    if (!mimeType) {
-        throw new Error(`Unsupported image extension for MIME lookup: ${extension}`)
-    }
-
-    return {
-        data: data.toString('base64'),
-        mimeType
-    };
-}
-
 async function getFileNames(directory: string) {
     const entries = await fs.readdir(directory, { withFileTypes: true });
 
@@ -286,16 +252,6 @@ async function deleteUnusedImages() {
 
     return deletedFileNames
 }
-
-
-
-ipcMainHandle("getDrillImage", async (_, fileName: string) => {
-    try {
-        return { success: true, data: await getImage(fileName) }
-    } catch (err) {
-        return { success: false, error: getErrorMessage(err) }
-    }
-})
 
 ipcMainHandle("exportDrills", async (_, drills: Drill[]) => {
     try {

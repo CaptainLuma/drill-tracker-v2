@@ -245,7 +245,7 @@ export default function DrillListSection() {
         }
 
         if (confirmModal) {
-            const userResponse = await confirmModal.openConfirmModal("Export your pinned drills to a text file?")
+            const userResponse = await confirmModal.openConfirmModal("Export your pinned drills to a markdown file?")
 
             if (!userResponse) return
         }

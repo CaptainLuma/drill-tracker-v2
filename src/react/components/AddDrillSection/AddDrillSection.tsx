@@ -218,28 +218,10 @@ export default function AddDrillSection() {
         if (!result.data) return
 
         setUserSelectedImage(result.data)
-
-        // set image preview
-        // const imageDataResult = await window.api.getDrillImage(userSelectedImage)
-
-        // if (!imageDataResult.success) {
-        //     addAlert({ message: `Failed to load image. ${imageDataResult.error}`, type: "danger" })
-        //     return
-        // }
-
-        // const image = imageDataResult.data
-        // if (imagePreviewRef.current)
-        //     imagePreviewRef.current.src = `data:${image.mimeType};base64,${image.data}`
-
-        // if (imagePreviewRef.current)
-        //     imagePreviewRef.current.src = `drill-image://${userSelectedImage}`
     }
 
     async function onRemoveImageButtonClicked() {
         setUserSelectedImage(null)
-
-        // if (imagePreviewRef.current)
-        //     imagePreviewRef.current.src = imageEmpty
     }
 
     return (<section className={style.addDrillSection}>
