@@ -169,6 +169,11 @@ export default function AddDrillSection() {
         if (drillResponse?.success) {
             addAlert({ message: `Deleted drill "${drillResponse.data.name}".` })
         }
+
+        window.api.deleteUnusedImages().then(result => {
+            if (!result.success)
+                console.log("Failed to delete unused images. Error:", result.error)
+        })
         
         navigation?.navigateToPage({
             page: "drill list page"

@@ -265,6 +265,10 @@ export default function DrillListSection() {
     }
 
     function RenderDrillList(drills: Drill[]) {
+        if (drills.length == 0) {
+            return <p>There are no drills yet.</p>
+        }
+
         return (<>
             <LayoutGroup>
                 <div className={style.drillList}>

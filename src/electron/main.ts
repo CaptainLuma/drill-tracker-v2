@@ -228,25 +228,43 @@ async function getFileNames(directory: string) {
 
 async function deleteUnusedImages() {
     const directory = path.join(dataPath, "drill-images");
+    const validImageExtensions = new Set([
+        '.png',
+        '.jpg',
+        '.jpeg',
+        '.webp',
+        '.bmp',
+        '.gif',
+        '.svg',
+        '.avif'
+    ])
+
+    try {
+        await fs.access(directory)
+    } catch {
+        return []
+    }
 
     const usedImages = new Set(database.getDrills().map(d => d.image).filter(i => i != null))
     const allImages = await getFileNames(directory)
-    const unusedImages = allImages.filter(img => !usedImages.has(img))
+    const unusedImages = allImages.filter(
+        img => validImageExtensions.has(path.extname(img).toLowerCase()) && !usedImages.has(img)
+    )
 
-    let deletedFileNames = []
+    let deletedFileNames: string[] = []
     for (const fileName of unusedImages) {
         const filePath = path.join(directory, fileName);
 
         try {
             const stats = await fs.stat(filePath);
 
-            // Only delete regular files, never directories.
+            // Only delete regular image files, never directories or non-image files.
             if (stats.isFile()) {
                 await fs.unlink(filePath);
                 deletedFileNames.push(fileName)
             }
         } catch {
-            console.log(`failed to delete image: ${fileName}`)    
+            console.log(`failed to delete image: ${fileName}`)
         }
     }
 
