@@ -1,4 +1,4 @@
-import { useEffect, useImperativeHandle, useState, type Ref } from "react"
+import { useEffect, useImperativeHandle, useRef, useState, type Ref } from "react"
 import TagList from "../TagList/TagList"
 
 interface Tag {
@@ -26,6 +26,7 @@ interface Props {
 
 export default function TagListState({ tags, toggledTags, ref }: Props) {
     const toggledIds = new Set(toggledTags.map(t => t.id))
+    const previousToggledTagIds = useRef(toggledTags.map(t => t.id))
 
     const [ tagButtons, setTagButtons ] = useState<TagButtonData[]>(tags.map(t => ({
         id: t.id, 
@@ -35,11 +36,17 @@ export default function TagListState({ tags, toggledTags, ref }: Props) {
     // update tagButtonData when the toggledTags prop is changed
     useEffect(() => {
         const toggledIds = new Set(toggledTags.map(t => t.id))
+        const currentToggledTagIds = toggledTags.map(t => t.id)
+        const toggledTagsChanged = currentToggledTagIds.length !== previousToggledTagIds.current.length ||
+            currentToggledTagIds.some((id, index) => id !== previousToggledTagIds.current[index])
 
-        setTagButtons(tags.map(t => ({
-            id: t.id, 
-            toggled: toggledIds.has(t.id)
+        setTagButtons(prev => tags.map(t => ({
+            id: t.id,
+            toggled: toggledTagsChanged
+                ? toggledIds.has(t.id)
+                : prev.find(button => button.id === t.id)?.toggled ?? false
         })))
+        previousToggledTagIds.current = currentToggledTagIds
     }, [tags, toggledTags]) 
 
     useImperativeHandle(ref, () => ({
@@ -49,9 +56,14 @@ export default function TagListState({ tags, toggledTags, ref }: Props) {
     }), [tagButtons])
 
     function handleTagToggled(id: number) {
-        setTagButtons(prev => prev.map(item =>
-            item.id === id ? { ...item, toggled: !item.toggled } : item
-        ))
+        setTagButtons(prev => {
+            if (!prev.some(item => item.id === id))
+                return [...prev, { id, toggled: true }]
+
+            return prev.map(item =>
+                item.id === id ? { ...item, toggled: !item.toggled } : item
+            )
+        })
     }
 
     return (<>

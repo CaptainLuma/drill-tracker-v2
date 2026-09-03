@@ -84,11 +84,19 @@ export default function AddDrillSection() {
             return false
         }
 
+        const toggledEvents = eventButtonsRef.current?.getToggledTags() ?? null
+        const toggledLevels = levelButtonsRef.current?.getToggledTags() ?? null
+
+        // console.log(toggledEvents, toggledLevels)
+
+        if (toggledEvents == null || toggledLevels == null)
+            return false
+
         const drill: NewDrill = {
             name: name,
             description: description,
-            events: eventButtonsRef.current?.getToggledTags() ?? [],
-            levels: levelButtonsRef.current?.getToggledTags() ?? [],
+            events: toggledEvents,
+            levels: toggledLevels,
             image: userSelectedImage
         }
 
