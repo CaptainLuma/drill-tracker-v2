@@ -2,16 +2,16 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import DrillListItem from "../DrillListItem/DrillListItem"
 import type { Drill } from "../../../shared/models/drill"
 import style from "./DrillListSection.module.css"
-import { useContext, useEffect, useState } from "react"
+import { useContext, useEffect, useState, useRef } from "react"
 import { ConfirmModalContext, NavigationContext } from "../../App"
 import AlertsList from "../AlertsList/AlertsList"
-import { LayoutGroup } from "motion/react"
 import { useAlerts } from "../../context/AlertContext"
 import TagList from "../TagList/TagList"
 import imageDice from "../../../assets/images/dice (3).svg"
 import imageBackup from "../../../assets/images/download-square-svgrepo-com.svg"
 import imageDocument from "../../../assets/images/document (1).svg"
 import { shuffle } from "../../../shared/helpers"
+import { useVirtualizer } from "@tanstack/react-virtual"
 
 type TagFilter = {
     id: number,
@@ -92,6 +92,14 @@ export default function DrillListSection() {
     const [ searchString, setSearchString ] = useState<string>("")
 
     const [ resultLimit, setResultLimit ] = useState(0)
+
+    const drillListRef = useRef<HTMLDivElement>(null)
+    const rowVirtualizer = useVirtualizer({
+        count: drills.length,
+        getScrollElement: () => drillListRef.current,
+        estimateSize: () => 50,
+        overscan: 5,
+    })
 
     useEffect(() => {
         if (!events || !levels)
@@ -269,19 +277,35 @@ export default function DrillListSection() {
             return <p>There are no drills yet.</p>
         }
 
-        return (<>
-            <LayoutGroup>
-                <div className={style.drillList}>
-                    {drills.map(drill => (
-                        <DrillListItem
-                            key={drill.id}
-                            drill={drill}
-                            onPin={pinDrill}
-                        />
-                    ))}
+        return (
+            <div ref={drillListRef} className={style.drillListViewport}>
+                <div
+                    className={style.drillList}
+                    style={{ height: `${rowVirtualizer.getTotalSize()}px` }}
+                >
+                    {rowVirtualizer.getVirtualItems().map(virtualRow => {
+                        const drill = drills[virtualRow.index]
+
+                        return (
+                            <div
+                                key={drill.id}
+                                data-index={virtualRow.index}
+                                ref={rowVirtualizer.measureElement}
+                                className={style.drillListRow}
+                                style={{
+                                    transform: `translateY(${virtualRow.start}px)`,
+                                }}
+                            >
+                                <DrillListItem
+                                    drill={drill}
+                                    onPin={pinDrill}
+                                />
+                            </div>
+                        )
+                    })}
                 </div>
-            </LayoutGroup>
-        </>)
+            </div>
+        )
     }
 
     return (<section className={style.drillListSection}>
@@ -300,7 +324,7 @@ export default function DrillListSection() {
             }
         </div>
 
-        <div className="formHorizontalDiv">
+        <div className="formHorizontalDiv mv-1">
             <label>Filter by levels:</label>
 
             { levels && levelFilters &&

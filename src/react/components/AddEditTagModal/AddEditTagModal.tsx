@@ -170,7 +170,7 @@ export default function AddEditTagModal(props: Props) {
                 { alertMessage && <p className={style.alert}>{alertMessage}</p> }
 
                 { props.mode == "edit" && props.events &&
-                    <div className="formHorizontalDiv">
+                    <div className="formHorizontalDiv mv-2">
                         <label>{props.tagType == "event" ? "Event" : "Level"} to Edit:</label>
                         <select 
                             ref={tagSelectRef}
@@ -181,7 +181,7 @@ export default function AddEditTagModal(props: Props) {
                     </div>
                 }
 
-                <div className="formHorizontalDiv">
+                <div className="formHorizontalDiv mv-2">
                     <label>Name:</label>
                     <input type="text" ref={nameInputRef} />
                 </div>

@@ -242,7 +242,7 @@ export default function AddDrillSection() {
 
         <AlertsList />
 
-        <div className="formHorizontalDiv">
+        <div className="formHorizontalDiv mv-2">
             <label>Name:</label>
             <input ref={nameInputRef} type="text" />
         </div>

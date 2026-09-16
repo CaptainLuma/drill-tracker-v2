@@ -1,8 +1,10 @@
 .drillListSection {
     width: calc(100% - 60px);
     max-width: 1100px;
-    margin: auto;
-    margin-bottom: 300px;
+    height: calc(100dvh - 30px);
+    margin: 0 auto 30px;
+    display: flex;
+    flex-direction: column;
 }
 
 .controls {
@@ -66,4 +68,23 @@
 .inlineImageButtonContainer:hover .inlineImageButtonLabel {
     opacity: 1;
     pointer-events: auto;
+}
+
+.drillListViewport {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    contain: strict;
+}
+
+.drillList {
+    position: relative;
+    width: 100%;
+}
+
+.drillListRow {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
 }

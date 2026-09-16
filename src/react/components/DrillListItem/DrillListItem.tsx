@@ -14,7 +14,6 @@ interface Props {
 }
 
 const animationMovementSpeed = 0.3
-// const animationInOutSpeed = 0.1
 
 export default function DrillListItem({ drill, onPin }: Props) {
     const [ expanded, setExpanded ] = useState(false)
@@ -24,17 +23,7 @@ export default function DrillListItem({ drill, onPin }: Props) {
 
     return (<motion.div
         className={style.drillListItem}
-        layout
         initial={false}
-        transition={{
-            type: "spring",
-            stiffness: 500,
-            damping: 35,
-            layout: {
-                duration: animationMovementSpeed,
-                ease: "easeInOut"
-            }
-        }}
     >
         <div className={`${style.header} ${drill.pinned ? style.headerPinned : ""}`}>
             <img
