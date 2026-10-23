@@ -264,6 +264,7 @@ export default function DrillListSection() {
         }
     }
 
+    // renders the actual drill list (minus controls)
     function RenderDrillList(drills: Drill[]) {
         if (drills.length == 0) {
             return <p>There are no drills yet.</p>
