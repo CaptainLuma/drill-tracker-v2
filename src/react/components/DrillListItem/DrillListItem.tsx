@@ -1,5 +1,5 @@
 import type { Drill } from "../../../shared/models/drill";
-import { useContext, useState } from "react";
+import { useContext, useState, useEffect } from "react";
 import style from "./DrillListItem.module.css"
 import imageDropdown from "../../../assets/images/dropdown.svg"
 import imageHollowPin from "../../../assets/images/pin-hollow.svg"
@@ -19,6 +19,10 @@ export default function DrillListItem({ drill, onPin }: Props) {
     const [ expanded, setExpanded ] = useState(false)
     // const [ pinned, setPinned ] = useState(false)
 
+    useEffect(() => {
+        console.log(`setting expand state for drill ${drill.id} to: ${expanded}`)
+    }, [expanded])
+
     const navigation = useContext(NavigationContext)
 
     return (<motion.div
@@ -29,7 +33,7 @@ export default function DrillListItem({ drill, onPin }: Props) {
             <img
                 src={imageDropdown} 
                 alt="expand" 
-                onClick={() => setExpanded(!expanded)}
+                onClick={() => setExpanded(expanded => !expanded)}
             />
             <h3>{drill.name}</h3>
 

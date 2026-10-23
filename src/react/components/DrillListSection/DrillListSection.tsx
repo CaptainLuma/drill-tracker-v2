@@ -99,6 +99,7 @@ export default function DrillListSection() {
         getScrollElement: () => drillListRef.current,
         estimateSize: () => 50,
         overscan: 5,
+        useAnimationFrameWithResizeObserver: true,
     })
 
     useEffect(() => {
@@ -203,11 +204,16 @@ export default function DrillListSection() {
     })
 
     async function pinDrill(id: number): Promise<void> {
-        // console.log(`pinning drill "${drills?.find(d => d.id === id)?.name}"`)
+        if (!drills) {
+            console.log("WARNING: the drills list does not exist.", drills)
+            return
+        }
 
         const originalDrill = drills?.find(d => d.id === id)
-        if (!originalDrill)
+        if (!originalDrill) {
+            console.log(`WARNING: could not find drill with id: ${id}`, originalDrill)
             return
+        }
 
         const editedDrill: Drill = { ...originalDrill }
         editedDrill.pinned = !editedDrill.pinned
