@@ -192,30 +192,30 @@ export default function DrillListSection() {
         filterAndSortDrills()
     }, [drillsResponse, eventFilters, levelFilters, searchString, searchType, resultLimit])
 
-    const { mutateAsync: editDrillMutation } = useMutation({
-        mutationFn: (drill: Drill) => window.api.editDrill(drill),
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ["drills"] })
-        }
-    })
+    // const { mutateAsync: editDrillMutation } = useMutation({
+    //     mutationFn: (drill: Drill) => window.api.editDrill(drill),
+    //     onSuccess: () => {
+    //         queryClient.invalidateQueries({ queryKey: ["drills"] })
+    //     }
+    // })
 
     async function pinDrill(id: number): Promise<void> {
-        // console.log(`pinning drill "${drills?.find(d => d.id === id)?.name}"`)
+        if (!drills) return
 
-        const originalDrill = drills?.find(d => d.id === id)
-        if (!originalDrill)
-            return
-
-        const editedDrill: Drill = { ...originalDrill }
+        let drillsCopy = drills.map(x => x) // copy
+        
+        // pin drill
+        const editedDrill = drillsCopy.find(d => d.id === id)!
         editedDrill.pinned = !editedDrill.pinned
 
-        try {
-            await editDrillMutation(editedDrill)
-            // await queryClient.refetchQueries({ queryKey: ["drills"], type: "active" })
-        } catch (_) {
-            // TODO
-            console.log("edit failed.")
-        }
+        // move pinned to top
+        drillsCopy = [...drillsCopy].sort((a, b) => {
+            return Number(b.pinned) - Number(a.pinned)
+        })
+
+        setDrills(drillsCopy)
+
+        window.api.editDrill(editedDrill)
     }
 
     function applyTagFilter(tagType: "event" | "level", id: number) {
