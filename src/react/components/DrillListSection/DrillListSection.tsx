@@ -39,6 +39,8 @@ const searchOptions: SearchOptionInfo[] = [
     }
 ]
 
+const renderBatchLength = 250
+
 export default function DrillListSection() {
     const queryClient = useQueryClient()
     const { addAlert } = useAlerts()
@@ -46,8 +48,10 @@ export default function DrillListSection() {
     const confirmModal = useContext(ConfirmModalContext)
 
     const [ drills, setDrills ] = useState<Drill[]>([])
+    const [ drillRenderLimit, setDrillRenderLimit ] = useState<number>(renderBatchLength)
 
-    const { data: result, isLoading, error, isError } = useQuery({
+    // get drills data
+    const { data: drillsResponse, isLoading, error, isError } = useQuery({
         queryFn: () => window.api.getDrills(),
         queryKey: ["drills"],
     })
@@ -75,13 +79,13 @@ export default function DrillListSection() {
             })
         }
 
-        if (result?.success == false) {
+        if (drillsResponse?.success == false) {
             addAlert({
-                message: result.error,
+                message: drillsResponse.error,
                 type: "danger"
             })
         }
-    }, [isError, error, result]);
+    }, [isError, error, drillsResponse]);
 
     // TODO: Add error handling for events and levels queries
 
@@ -112,10 +116,10 @@ export default function DrillListSection() {
     }, [events, levels])
 
     function filterAndSortDrills(randomOrder = false) {
-        if (!result?.success)
+        if (!drillsResponse?.success)
             return
 
-        let drillList = [...result.data]
+        let drillList = [...drillsResponse.data]
 
         // apply event filters
         const selectedEvents = eventFilters?.filter(x => x.toggled).map(x => x.id)
@@ -184,8 +188,9 @@ export default function DrillListSection() {
     }
 
     useEffect(() => {
+        setDrillRenderLimit(renderBatchLength)
         filterAndSortDrills()
-    }, [result, eventFilters, levelFilters, searchString, searchType, resultLimit])
+    }, [drillsResponse, eventFilters, levelFilters, searchString, searchType, resultLimit])
 
     const { mutateAsync: editDrillMutation } = useMutation({
         mutationFn: (drill: Drill) => window.api.editDrill(drill),
@@ -273,7 +278,7 @@ export default function DrillListSection() {
         return (<>
             <LayoutGroup>
                 <div className={style.drillList}>
-                    {drills.map(drill => (
+                    {drills.slice(0, drillRenderLimit).map(drill => (
                         <DrillListItem
                             key={drill.id}
                             drill={drill}
@@ -416,6 +421,15 @@ export default function DrillListSection() {
 
         {drills &&
             RenderDrillList(drills)
+        }
+
+        {drills.length > drillRenderLimit &&
+            <div className={style.loadMoreDiv}>
+                <button 
+                    className={style.loadMoreButton}
+                    onClick={() => setDrillRenderLimit(prev => prev + renderBatchLength)}
+                >Load More...</button>
+            </div>
         }
     </section>)
 }

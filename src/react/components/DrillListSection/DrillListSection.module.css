@@ -67,3 +67,16 @@
     opacity: 1;
     pointer-events: auto;
 }
+
+.loadMoreDiv {
+    /* border: 2px solid magenta; */
+}
+
+.loadMoreButton {
+    display: block;
+    margin: auto;
+    margin-top: 10px;
+    border: none;
+    background-color: transparent;
+    color: var(--shallow-text-color);
+}
